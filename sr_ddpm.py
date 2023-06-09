@@ -4,9 +4,6 @@ import core.logger as Logger
 import logging
 from tensorboardX import SummaryWriter
 import data as Data
-from data.pytorch_dataset import PyTorchDataset
-
-
 
 
 
@@ -47,9 +44,9 @@ if __name__ == "__main__":
         y_test_df
     )
 
-    train_ds = PyTorchDataset(X_train_df, y_train_df)
-    valid_ds = PyTorchDataset(X_valid_df, y_valid_df)
-    test_ds  = PyTorchDataset(X_test_df, y_test_df)
+    train_ds = Data.create_dataset(X_train_df, y_train_df)
+    valid_ds = Data.create_dataset(X_valid_df, y_valid_df)
+    test_ds  = Data.create_dataset(X_test_df, y_test_df)
 
     train_loader = Data.create_dataloader(train_ds, opt["training"], phase="train")
     valid_loader = Data.create_dataloader(valid_ds, opt["training"])
@@ -57,6 +54,6 @@ if __name__ == "__main__":
 
     logger.info('Initial Dataset Finished')
 
-    print(train_ds.__getitem__(0))
+    print(train_ds.__getitem__(0)[0].shape)
     print(train_loader)
     
