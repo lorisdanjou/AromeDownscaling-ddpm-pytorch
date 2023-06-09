@@ -51,7 +51,11 @@
         "optimizer": {
             "type": "adam",
             "lr": 1e-4
-        }
+        },
+        "n_iter": 1, //fixé au pif
+        "val_freq": 1,//1e4
+        "save_checkpoint_freq": 1,//1e4,
+        "print_freq": 1 //200
     },
     "model": {
         "which_model_G": "ddpm",
@@ -81,13 +85,13 @@
                 "n_timestep": 2000,
                 "linear_start": 1e-6,
                 "linear_end": 1e-2
+            },
+            "val": {
+                "schedule": "linear",
+                "n_timestep": 2000,
+                "linear_start": 1e-6,
+                "linear_end": 1e-2
             }
-            // "val": {
-            //     "schedule": "linear",
-            //     "n_timestep": 2000,
-            //     "linear_start": 1e-6,
-            //     "linear_end": 1e-2
-            // }
         }
     }
 }
