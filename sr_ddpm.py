@@ -57,6 +57,6 @@ if __name__ == "__main__":
 
     logger.info('Initial Dataset Finished')
 
-    print(train_ds.__get_item__(0))
+    print(train_ds.__getitem__(0))
     print(train_loader)
     

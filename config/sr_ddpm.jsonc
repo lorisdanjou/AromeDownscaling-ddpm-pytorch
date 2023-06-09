@@ -41,8 +41,10 @@
         "static_fields": [],
         "config": "optimisation" // "optimisation" or "test" 
     },
+    "preprocessing": {
+        "normalisation": "standardisation" //"satndardisation", "normalisation", "minmax" or "mean" 
+    },
     "training": {
-        "normalisation": "standardisation", //"satndardisation", "normalisation", "minmax" or "mean" 
         "batch_size": 4,
         "num_workers": 8,
         "use_shuffle": true

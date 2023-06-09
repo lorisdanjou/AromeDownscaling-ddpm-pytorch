@@ -1,3 +1,4 @@
+from bronx.stdtypes.date import daterangex as rangex
 import data.load_data as ld
 import data.normalisations as norm
 from .pytorch_dataset import PyTorchDataset
@@ -8,9 +9,9 @@ def load_data(data_loading_opt):
     data_valid_location  = data_loading_opt["data_valid_location"]
     data_test_location   = data_loading_opt["data_test_location"]
     data_static_location = data_loading_opt["data_static_location"]
-    dates_train          = data_loading_opt["dates_train"]
-    dates_valid          = data_loading_opt["dates_valid"]
-    dates_test           = data_loading_opt["fates_test"]
+    dates_train          = rangex(data_loading_opt["dates_train"])
+    dates_valid          = rangex(data_loading_opt["dates_valid"])
+    dates_test           = rangex(data_loading_opt["dates_test"])
     echeances            = data_loading_opt["echeances"]
     params_in            = data_loading_opt["params_in"]
     params_out           = data_loading_opt["params_out"]
@@ -114,7 +115,7 @@ def load_data(data_loading_opt):
     return X_train_df, y_train_df, X_valid_df, y_valid_df, X_test_df, y_test_df
 
 def  preprocess_data(opt, X_train_df, y_train_df, X_valid_df, y_valid_df, X_test_df, y_test_df):
-    training_opt = opt["preprocessing"]
+    preproc_opt = opt["preprocessing"]
     output_dir = opt["path"]["working_dir"]
 
     # remove missing days
@@ -128,24 +129,24 @@ def  preprocess_data(opt, X_train_df, y_train_df, X_valid_df, y_valid_df, X_test
     X_test_df , y_test_df  = ld.pad(X_test_df),  ld.pad(y_test_df)
 
     # Normalisation:
-    if training_opt["normalisation"] == "standardisation":
+    if preproc_opt["normalisation"] == "standardisation":
         norm.get_mean(X_train_df, output_dir)
         norm.get_std(X_train_df, output_dir)
         X_train_df, y_train_df = norm.standardisation(X_train_df, output_dir), norm.standardisation(y_train_df, output_dir)
         X_valid_df, y_valid_df = norm.standardisation(X_valid_df, output_dir), norm.standardisation(y_valid_df, output_dir)
         X_test_df , y_test_df  = norm.standardisation(X_test_df, output_dir) , norm.standardisation(y_test_df, output_dir)
-    elif opt["training"]["normalisation"] == "normalisation":
+    elif preproc_opt["normalisation"] == "normalisation":
         norm.get_max_abs(X_train_df, output_dir)
         X_train_df, y_train_df = norm.normalisation(X_train_df, output_dir), norm.normalisation(y_train_df, output_dir)
         X_valid_df, y_valid_df = norm.normalisation(X_valid_df, output_dir), norm.normalisation(y_valid_df, output_dir)
         X_test_df , y_test_df  = norm.normalisation(X_test_df, output_dir) , norm.normalisation(y_test_df, output_dir)
-    elif opt["training"]["normalisation"] == "minmax":
+    elif preproc_opt["normalisation"] == "minmax":
         norm.get_min(X_train_df, output_dir)
         norm.get_max(X_train_df, output_dir)
         X_train_df, y_train_df = norm.min_max_norm(X_train_df, output_dir), norm.min_max_norm(y_train_df, output_dir)
         X_valid_df, y_valid_df = norm.min_max_norm(X_valid_df, output_dir), norm.min_max_norm(y_valid_df, output_dir)
         X_test_df , y_test_df  = norm.min_max_norm(X_test_df, output_dir) , norm.min_max_norm(y_test_df, output_dir)
-    elif opt["training"]["normalisation"] == "mean":
+    elif preproc_opt["normalisation"] == "mean":
         norm.get_min(X_train_df, output_dir)
         norm.get_max(X_train_df, output_dir)
         norm.get_mean(X_train_df, output_dir)
@@ -160,6 +161,7 @@ def  preprocess_data(opt, X_train_df, y_train_df, X_valid_df, y_valid_df, X_test
 
 def create_dataset(X_df, y_df):
     return PyTorchDataset(X_df, y_df)
+
 
 def create_dataloader(dataset, training_opt, phase=None):
     if phase == "train":

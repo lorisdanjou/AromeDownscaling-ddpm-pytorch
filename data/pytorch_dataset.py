@@ -12,8 +12,8 @@ class PyTorchDataset(Dataset):
         return len(self.X_df)
 
     def __getitem__(self, index):
-        X_array = ld.df_to_array(self.X_df)
-        y_array = ld.df_to_array(self.y_df)
+        X_array = ld.df_to_array(self.X_df.loc[index])
+        y_array = ld.df_to_array(self.y_df.loc[index])
         X = torch.from_numpy(X_array)
         y = torch.from_numpy(y_array)
         

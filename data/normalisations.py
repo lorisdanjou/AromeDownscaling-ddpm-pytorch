@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from preprocessing.load_data import get_arrays_cols, param_to_array
+from data.load_data import get_arrays_cols, param_to_array
 
 
 
