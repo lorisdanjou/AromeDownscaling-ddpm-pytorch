@@ -47,7 +47,47 @@
     "training": {
         "batch_size": 4,
         "num_workers": 8,
-        "use_shuffle": true
+        "use_shuffle": true,
+        "optimizer": {
+            "type": "adam",
+            "lr": 1e-4
+        }
+    },
+    "model": {
+        "which_model_G": "ddpm",
+        "unet": {
+            "in_channel": 4,
+            "out_channel": 2,
+            "norm_groups": null,
+            "inner_channel": 64,
+            "channel_multiplier": [
+                1,
+                2,
+                4,
+                8
+            ],
+            "res_blocks": 2,
+            "dropout": 0.2
+        },
+        "diffusion": {
+            "img_h": 224,
+            "img_w": 272,
+            "channels": 1, //sample channel
+            "conditional": true // unconditional generation or conditional generation(super_resolution)
+        },
+        "beta_schedule": { // use manual beta_schedule for acceleration
+            "train": {
+                "schedule": "linear",
+                "n_timestep": 2000,
+                "linear_start": 1e-6,
+                "linear_end": 1e-2
+            }
+            // "val": {
+            //     "schedule": "linear",
+            //     "n_timestep": 2000,
+            //     "linear_start": 1e-6,
+            //     "linear_end": 1e-2
+            // }
+        }
     }
-
 }
