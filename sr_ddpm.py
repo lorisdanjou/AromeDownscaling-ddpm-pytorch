@@ -5,7 +5,13 @@ import core.logger as Logger
 import logging
 from tensorboardX import SummaryWriter
 import data as Data
+from data.load_data import get_arrays_cols, crop
+from data.normalisations import destandardisation
 import model as Model
+import results.results as res
+import numpy as np
+import matplotlib.pyplot as plt
+import pandas as pd
 
 
 
@@ -46,23 +52,23 @@ if __name__ == "__main__":
         y_test_df
     )
 
+
     train_ds = Data.create_dataset(X_train_df, y_train_df)
-    valid_ds = Data.create_dataset(X_valid_df, y_valid_df, data_len=opt["training"]["data_len"])
-    test_ds  = Data.create_dataset(X_test_df, y_test_df, data_len=opt["training"]["data_len"])
+    valid_ds = Data.create_dataset(X_valid_df, y_valid_df)#, data_len=opt["training"]["data_len"])
+    test_ds  = Data.create_dataset(X_test_df, y_test_df)
 
-    train_loader = Data.create_dataloader(train_ds, opt["training"], phase="train")
-    valid_loader = Data.create_dataloader(valid_ds, opt["training"])
-    test_loader  = Data.create_dataloader(test_ds, opt["training"])
 
-    # print(valid_ds.__len__())
-    # print(valid_ds.__getitem__(0))
-    # for _, elem in enumerate(valid_loader):
-    #     print(elem)
-
+    train_loader = Data.create_dataloader(train_ds, training_opt=opt["training"], phase="train")
+    valid_loader = Data.create_dataloader(valid_ds, training_opt=opt["training"])
+    test_loader  = Data.create_dataloader(test_ds, training_opt=opt["training"])
     logger.info('Initial Dataset Finished')
 
-    # print(train_ds.__getitem__(0)[0].shape)
-    # print(train_loader)
+    # for i, val_data in enumerate(valid_loader):
+    #     fig, ax = plt.subplots()
+    #     im = ax.imshow(val_data["HR"][0, 0, :, :].numpy())
+    #     fig.colorbar(im, ax=ax)
+    #     plt.savefig('/cnrm/recyf/Data/users/danjoul/ddpm/experiments/test/hr_{}.png'.format(i))
+
 
     # model
     diffusion = Model.create_model(opt)
@@ -77,6 +83,8 @@ if __name__ == "__main__":
     diffusion.set_new_noise_schedule(
         opt['model']['beta_schedule']["train"], schedule_phase="train")
 
+    val_steps = []
+    val_loss = []
     while current_step < n_iter:
         current_epoch += 1
         for _, train_data in enumerate(train_loader):
@@ -95,57 +103,47 @@ if __name__ == "__main__":
                     tb_logger.add_scalar(k, v, current_step)
                 logger.info(message)
 
+
             # validation
             if current_step % opt["training"]["val_freq"] == 0:
-                # print("hey")
-                # avg_psnr = 0.0
-                idx = 0
                 result_path = '{}/{}'.format(opt['path']
                                                 ['results'], current_epoch)
                 os.makedirs(result_path, exist_ok=True)
 
                 diffusion.set_new_noise_schedule(
                     opt['model']['beta_schedule']['val'], schedule_phase='val')
-                for _,  val_data in enumerate(valid_loader):
-                    idx += 1
+
+                indices = np.random.randint(0, len(valid_ds), opt["training"]["data_len"])
+                valid_subset = torch.utils.data.Subset(valid_ds, indices)
+                valid_loader = Data.create_dataloader(valid_subset)
+                for i, val_data in enumerate(valid_loader):
+                    # # plot hr output
+                    # out_hr = val_data["HR"].cpu().numpy()
+                    # fig, ax = plt.subplots()
+                    # im = ax.imshow(out_hr[0, 0, :, :])
+                    # fig.colorbar(im, ax=ax)
+                    # plt.savefig(opt["path"]["results"] + "hr_{}.png".format(current_step))
+
                     diffusion.feed_data(val_data)
                     diffusion.test(continous=False)
-                print(idx)
-                    # diffusion.feed_data(val_data)
-                    # diffusion.test(continous=False)
-                    # visuals = diffusion.get_current_visuals()
-                    # sr_img = Metrics.tensor2img(visuals['SR'])     # uint8
-                    # hr_img = Metrics.tensor2img(visuals['HR'])     # uint8
-                    # lr_img = Metrics.tensor2img(visuals['LR'])     # uint8
-                    # fake_img = Metrics.tensor2img(visuals['INF'])  # uint8
 
-                    # generation
-                    # Metrics.save_img(
-                    #     hr_img, '{}/{}_{}_hr.png'.format(result_path, current_step, idx))
-                    # Metrics.save_img(
-                    #     sr_img, '{}/{}_{}_sr.png'.format(result_path, current_step, idx))
-                    # Metrics.save_img(
-                    #     lr_img, '{}/{}_{}_lr.png'.format(result_path, current_step, idx))
-                    # Metrics.save_img(
-                    #     fake_img, '{}/{}_{}_inf.png'.format(result_path, current_step, idx))
-                    # tb_logger.add_image(
-                    #     'Iter_{}'.format(current_step),
-                    #     np.transpose(np.concatenate(
-                    #         (fake_img, sr_img, hr_img), axis=1), [2, 0, 1]),
-                    #     idx)
-                    # avg_psnr += Metrics.calculate_psnr(
-                    #     sr_img, hr_img)
+                    # compute val_loss
+                    out_hr = val_data["HR"].cpu().numpy()
+                    out_sr = diffusion.SR.cpu().numpy()
+                    mse = np.mean(res.mse(out_hr, out_sr))
+                    logger.info("val_loss: {:.2f}".format(mse))
 
-                # avg_psnr = avg_psnr / idx
+                    # intermediate image plot
+                    fig, ax = plt.subplots()
+                    im = ax.imshow(out_sr[0, :, :])
+                    fig.colorbar(im, ax=ax)
+                    plt.savefig(opt["path"]["results"] + "{}_{:.2f}.png".format(current_step, mse))
+
+                    val_loss.append(mse)
+                    val_steps.append(current_step)
+
                 diffusion.set_new_noise_schedule(
                     opt['model']['beta_schedule']['train'], schedule_phase='train')
-                # log
-                # logger.info('# Validation # PSNR: {:.4e}'.format(avg_psnr))
-                # logger_val = logging.getLogger('val')  # validation logger
-                # logger_val.info('<epoch:{:3d}, iter:{:8,d}> psnr: {:.4e}'.format(
-                #     current_epoch, current_step, avg_psnr))
-                # tensorboard logger
-                # tb_logger.add_scalar('psnr', avg_psnr, current_step)
 
 
             if current_step % opt["training"]["save_checkpoint_freq"] == 0:
@@ -154,3 +152,39 @@ if __name__ == "__main__":
 
     # save model
     logger.info('End of training.')
+
+    # training curves
+    loss_curve = plt.figure()
+    plt.plot(val_steps, val_loss)
+    plt.title('model val mse')
+    plt.ylabel('mse')
+    plt.xlabel('iter')
+    plt.savefig(opt["path"]["working_dir"] + 'RMSE_curve.png')
+
+    # inference
+    y_pred_df = y_test_df.copy()
+    channels = get_arrays_cols(y_pred_df)
+
+    diffusion.set_new_noise_schedule(opt['model']['beta_schedule']['val'], schedule_phase='val')
+    for i, test_data in enumerate(test_loader):
+        diffusion.feed_data(test_data)
+        diffusion.test(continous=False)
+        out_sr = diffusion.SR.cpu().numpy()
+        for i_c, c in enumerate(channels):
+            y_pred_df[c][i] = out_sr[i_c, :, :]
+
+        # image plot
+        if i % opt["inference"]["print_freq"] == 0:
+            fig, ax = plt.subplots()
+            im = ax.imshow(out_sr[0, :, :])
+            fig.colorbar(im, ax=ax)
+            plt.savefig(opt["path"]["results"] + "image_{}.png".format(i))
+
+
+
+    y_pred_df = destandardisation(y_pred_df, opt["path"]["working_dir"])
+    y_pred_df = crop(y_pred_df)
+
+    y_pred_df.to_pickle(opt["path"]["working_dir"] + 'y_pred.csv')
+
+    logger.info("End of inference.")

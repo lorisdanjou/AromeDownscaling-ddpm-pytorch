@@ -4,6 +4,7 @@ import data.load_data as ld
 import pandas as pd
 import numpy as np
 import numpy.random
+import matplotlib.pyplot as plt
 
 
 class PyTorchDataset(Dataset):
@@ -32,8 +33,10 @@ class PyTorchDataset(Dataset):
 
         X_array = ld.df_to_array(X_df_item)
         y_array = ld.df_to_array(y_df_item)
-        X_array = X_array.reshape([X_array.shape[3], X_array.shape[1], X_array.shape[2]])
-        y_array = y_array.reshape([y_array.shape[3], y_array.shape[1], y_array.shape[2]])
+
+        X_array = X_array[0, :, :, :].transpose((2,0,1))
+        y_array = y_array[0, :, :, :].transpose((2,0,1))
+
         X = torch.from_numpy(X_array)
         y = torch.from_numpy(y_array)
 

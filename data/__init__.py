@@ -163,7 +163,7 @@ def create_dataset(X_df, y_df, data_len=-1):
     return PyTorchDataset(X_df, y_df, data_len=data_len)
 
 
-def create_dataloader(dataset, training_opt, phase=None):
+def create_dataloader(dataset, training_opt=None, phase=None):
     if phase == "train":
         return DataLoader(
             dataset,

@@ -41,15 +41,15 @@ dates_test = rangex([
 ])
 resample = 'r'
 echeances = range(6, 37, 3)
-working_dir = '/cnrm/recyf/Data/users/danjoul/unet_experiments/wind/losses/custom_loss/0.6-4/'
+working_dir = '/cnrm/recyf/Data/users/danjoul/ddpm/experiments/test/'
 
 
 # ========== Load Data
-results_df = load_results(working_dir, dates_valid, echeances, resample, data_test_location, baseline_location, param='t2m')
+results_df = load_results(working_dir, dates_valid, echeances, resample, data_test_location, baseline_location, param='u10')
 
 
 # ========== Plots
-plot_results(results_df, 't2m', working_dir)
+plot_results(results_df, 'u10', working_dir)
 # plot_score_maps(results_df, mae, 'mae', working_dir)
 # plot_distrib(results_df_u, mse, 'mse', working_dir)
 # plot_distrib(results_df, mae, 'mae', working_dir)

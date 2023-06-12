@@ -4,9 +4,10 @@
         0
     ],
     "path": {
-        "experiments": "/cnrm/recyf/Data/users/danjoul/ddpm/experiments",
+        "experiments": "/cnrm/recyf/Data/users/danjoul/ddpm/experiments/",
         "results": "/cnrm/recyf/Data/users/danjoul/ddpm/experiments/test/",
-        "log": "/cnrm/recyf/Data/users/danjoul/ddpm/logs",
+        "log": "/cnrm/recyf/Data/users/danjoul/ddpm/logs/",
+        "checkpoint": "/cnrm/recyf/Data/users/danjoul/ddpm/experiments/test/",
         "working_dir" : "/cnrm/recyf/Data/users/danjoul/ddpm/experiments/test/"
     },
     "data_loading": {
@@ -45,21 +46,6 @@
     "preprocessing": {
         "normalisation": "standardisation" //"satndardisation", "normalisation", "minmax" or "mean" 
     },
-    "training": {
-        "batch_size": 4,
-        "num_workers": 8,
-        "use_shuffle": true,
-        "optimizer": {
-            "type": "adam",
-            "lr": 1e-4
-        },
-        "n_iter": 1, //fixé au pif
-        "val_freq": 1,//1e4
-        "save_checkpoint_freq": 1,//1e4,
-        "print_freq": 1, //200
-        "data_len": 1
-
-    },
     "model": {
         "which_model_G": "ddpm",
         "unet": {
@@ -96,5 +82,23 @@
                 "linear_end": 1e-2
             }
         }
+    },
+    "training": {
+        "batch_size": 4,
+        "num_workers": 8,
+        "use_shuffle": true,
+        "optimizer": {
+            "type": "adam",
+            "lr": 1e-4
+        },
+        "n_iter": 50,
+        "val_freq": 1,//1e4
+        "save_checkpoint_freq": 1000,
+        "print_freq": 1,
+        "data_len": 1
+
+    },
+    "inference": {
+        "print_freq": 1
     }
 }
