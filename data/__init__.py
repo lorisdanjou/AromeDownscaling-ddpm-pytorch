@@ -159,8 +159,8 @@ def  preprocess_data(opt, X_train_df, y_train_df, X_valid_df, y_valid_df, X_test
     return X_train_df, y_train_df, X_valid_df, y_valid_df, X_test_df, y_test_df
 
 
-def create_dataset(X_df, y_df):
-    return PyTorchDataset(X_df, y_df)
+def create_dataset(X_df, y_df, data_len=-1):
+    return PyTorchDataset(X_df, y_df, data_len=data_len)
 
 
 def create_dataloader(dataset, training_opt, phase=None):

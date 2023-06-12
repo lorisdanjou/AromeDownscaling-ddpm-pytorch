@@ -5,6 +5,7 @@
     ],
     "path": {
         "experiments": "/cnrm/recyf/Data/users/danjoul/ddpm/experiments",
+        "results": "/cnrm/recyf/Data/users/danjoul/ddpm/experiments/test/",
         "log": "/cnrm/recyf/Data/users/danjoul/ddpm/logs",
         "working_dir" : "/cnrm/recyf/Data/users/danjoul/ddpm/experiments/test/"
     },
@@ -55,7 +56,9 @@
         "n_iter": 1, //fixé au pif
         "val_freq": 1,//1e4
         "save_checkpoint_freq": 1,//1e4,
-        "print_freq": 1 //200
+        "print_freq": 1, //200
+        "data_len": 1
+
     },
     "model": {
         "which_model_G": "ddpm",

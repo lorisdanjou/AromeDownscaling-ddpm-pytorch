@@ -2,15 +2,21 @@ import torch
 from torch.utils.data import Dataset
 import data.load_data as ld
 import pandas as pd
+import numpy as np
+import numpy.random
 
 
 class PyTorchDataset(Dataset):
-    def __init__(self, X_df, y_df):
+    def __init__(self, X_df, y_df, data_len=-1):
         self.X_df = X_df
         self.y_df = y_df
+        self.data_len = data_len
 
     def __len__(self):
-        return len(self.X_df)
+        if self.data_len < 0:
+            return len(self.X_df)
+        else: 
+            return self.data_len
 
     def __getitem__(self, index):
         X_df_item = pd.DataFrame(

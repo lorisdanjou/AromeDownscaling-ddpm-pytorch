@@ -47,12 +47,17 @@ if __name__ == "__main__":
     )
 
     train_ds = Data.create_dataset(X_train_df, y_train_df)
-    valid_ds = Data.create_dataset(X_valid_df, y_valid_df)
-    test_ds  = Data.create_dataset(X_test_df, y_test_df)
+    valid_ds = Data.create_dataset(X_valid_df, y_valid_df, data_len=opt["training"]["data_len"])
+    test_ds  = Data.create_dataset(X_test_df, y_test_df, data_len=opt["training"]["data_len"])
 
     train_loader = Data.create_dataloader(train_ds, opt["training"], phase="train")
     valid_loader = Data.create_dataloader(valid_ds, opt["training"])
     test_loader  = Data.create_dataloader(test_ds, opt["training"])
+
+    # print(valid_ds.__len__())
+    # print(valid_ds.__getitem__(0))
+    # for _, elem in enumerate(valid_loader):
+    #     print(elem)
 
     logger.info('Initial Dataset Finished')
 
@@ -92,6 +97,7 @@ if __name__ == "__main__":
 
             # validation
             if current_step % opt["training"]["val_freq"] == 0:
+                # print("hey")
                 # avg_psnr = 0.0
                 idx = 0
                 result_path = '{}/{}'.format(opt['path']
@@ -102,6 +108,8 @@ if __name__ == "__main__":
                     opt['model']['beta_schedule']['val'], schedule_phase='val')
                 for _,  val_data in enumerate(valid_loader):
                     idx += 1
+                    diffusion.feed_data(val_data)
+                    diffusion.test(continous=False)
                 print(idx)
                     # diffusion.feed_data(val_data)
                     # diffusion.test(continous=False)
