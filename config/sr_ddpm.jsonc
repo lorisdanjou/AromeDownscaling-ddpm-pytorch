@@ -91,7 +91,7 @@
             "type": "adam",
             "lr": 1e-4
         },
-        "n_iter": 50,
+        "n_iter": 1,
         "val_freq": 1,//1e4
         "save_checkpoint_freq": 1000,
         "print_freq": 1,

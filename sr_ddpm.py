@@ -8,7 +8,7 @@ import data as Data
 from data.load_data import get_arrays_cols, crop
 from data.normalisations import destandardisation
 import model as Model
-import results.results as res
+import core.metrics as Metrics
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -117,25 +117,19 @@ if __name__ == "__main__":
                 valid_subset = torch.utils.data.Subset(valid_ds, indices)
                 valid_loader = Data.create_dataloader(valid_subset)
                 for i, val_data in enumerate(valid_loader):
-                    # # plot hr output
-                    # out_hr = val_data["HR"].cpu().numpy()
-                    # fig, ax = plt.subplots()
-                    # im = ax.imshow(out_hr[0, 0, :, :])
-                    # fig.colorbar(im, ax=ax)
-                    # plt.savefig(opt["path"]["results"] + "hr_{}.png".format(current_step))
-
                     diffusion.feed_data(val_data)
                     diffusion.test(continous=False)
 
-                    # compute val_loss
-                    out_hr = val_data["HR"].cpu().numpy()
-                    out_sr = diffusion.SR.cpu().numpy()
-                    mse = np.mean(res.mse(out_hr, out_sr))
-                    logger.info("val_loss: {:.2f}".format(mse))
+                    # evaluate model
+                    hr_img = Metrics.tensor2image(val_data["HR"]) # see function update visuals 
+                    sr_img = Metrics.tensor2image(diffusion.SR)                    
+                    mae  = Metrics.score_value(hr_img, sr_img, "mae")
+                    mse  = Metrics.score_value(hr_img, sr_img, "mse")
+                    logger.info("[mae, mse]: [{:.3f}, {:.3f}]".format(mae, mse))
 
                     # intermediate image plot
                     fig, ax = plt.subplots()
-                    im = ax.imshow(out_sr[0, :, :])
+                    im = ax.imshow(sr_img[0, :, :])
                     fig.colorbar(im, ax=ax)
                     plt.savefig(opt["path"]["results"] + "{}_{:.2f}.png".format(current_step, mse))
 
