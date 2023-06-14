@@ -396,7 +396,7 @@ def correlation_mer(results_df): # using masks
 Plots
 '''
 def plot_results(results_df, param,  output_dir):
-    for i in range(10):
+    for i in range(30):
         fig, axs = plt.subplots(nrows=1,ncols=4, figsize = (28, 7))
         data = [results_df.X_test[i], results_df.baseline[i], results_df.y_pred[i], results_df.y_test[i]]
         images = []
@@ -440,7 +440,7 @@ def plot_score_maps(results_df, metric, metric_name, output_dir, cmap='coolwarm'
 def plot_unique_score_map(results_df, metric, metric_name, output_dir, cmap='coolwarm'):
     metric_df = datewise_scores(results_df, metric, metric_name)
     metric_baseline = metric_df[metric_name + '_baseline_map'].mean()
-    metric_y_pred   = metric_df[metric_name + '_baseline_map'].mean()
+    metric_y_pred   = metric_df[metric_name + '_y_pred_map'].mean()
     fig, axs = plt.subplots(nrows=1,ncols=2, figsize = (25, 12))
     images = []
     data = [metric_baseline, metric_y_pred]

@@ -142,6 +142,20 @@ class DDPM(BaseModel):
         logger.info(
             'Saved model in [{:s}] ...'.format(gen_path))
 
+    def save_best_model(self):
+        path = os.path.join(
+            self.opt['path']['checkpoint'], 'best_model.pth')
+        network = self.netG
+        if isinstance(self.netG, nn.DataParallel):
+            network = network.module
+        state_dict = network.state_dict()
+        for key, param in state_dict.items():
+            state_dict[key] = param.cpu()
+        torch.save(state_dict, path)
+
+        logger.info(
+            'Best model saved in [{:s}] ...'.format(path))
+
     def load_network(self):
         load_path = self.opt['path']['resume_state']
         if load_path is not None:
@@ -163,3 +177,11 @@ class DDPM(BaseModel):
                 self.optG.load_state_dict(opt['optimizer'])
                 self.begin_step = opt['iter']
                 self.begin_epoch = opt['epoch']
+
+    def load_best_model(self, load_path):
+        if load_path is not None:
+            logger.info('Loading best model for G [{:s}] ...'.format(load_path))
+            network = self.netG
+            network.load_state_dict(torch.load(
+                load_path), strict=(not self.opt['model']['finetune_norm']))
+            logger.info("Best model loaded.")

@@ -4,11 +4,12 @@
         0
     ],
     "path": {
-        "experiments": "/cnrm/recyf/Data/users/danjoul/ddpm_experiments/experiment/",
-        "results": "/cnrm/recyf/Data/users/danjoul/ddpm_experiments/experiment/results/",
-        "log": "/cnrm/recyf/Data/users/danjoul/ddpm_experiments/experiment/logs/",
-        "checkpoint": "/cnrm/recyf/Data/users/danjoul/ddpm_experiments/experiment/checkpoint/",
-        "working_dir" : "/cnrm/recyf/Data/users/danjoul/ddpm_experiments/experiment/"
+        "experiments": "/cnrm/recyf/Data/users/danjoul/ddpm_experiments/infer2/",
+        "results": "/cnrm/recyf/Data/users/danjoul/ddpm_experiments/infer2/results/",
+        "log": "/cnrm/recyf/Data/users/danjoul/ddpm_experiments/infer2/logs/",
+        "checkpoint": "/cnrm/recyf/Data/users/danjoul/ddpm_experiments/infer2/checkpoint/",
+        "working_dir" : "/cnrm/recyf/Data/users/danjoul/ddpm_experiments/infer2/",
+        "resume_state": "/cnrm/recyf/Data/users/danjoul/ddpm_experiments/base/I100000_E118" 
     },
     "data_loading": {
         // these hyperparameters should not be changed : 
