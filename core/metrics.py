@@ -40,7 +40,7 @@ def ssim_map(a, b):
     """
     Computes the SSIM map (using scikit-learn) between two numpy arrays.
     """
-    ssim_m, ssim_map = structural_similarity(
+    _, ssim_map = structural_similarity(
         a,
         b, 
         data_range=b.max() - b.min(),

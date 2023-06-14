@@ -4,11 +4,11 @@
         0
     ],
     "path": {
-        "experiments": "/cnrm/recyf/Data/users/danjoul/ddpm/experiments/",
-        "results": "/cnrm/recyf/Data/users/danjoul/ddpm/experiments/test/",
-        "log": "/cnrm/recyf/Data/users/danjoul/ddpm/logs/",
-        "checkpoint": "/cnrm/recyf/Data/users/danjoul/ddpm/experiments/test/",
-        "working_dir" : "/cnrm/recyf/Data/users/danjoul/ddpm/experiments/test/"
+        "experiments": "/cnrm/recyf/Data/users/danjoul/ddpm_experiments/experiment/",
+        "results": "/cnrm/recyf/Data/users/danjoul/ddpm_experiments/experiment/results/",
+        "log": "/cnrm/recyf/Data/users/danjoul/ddpm_experiments/experiment/logs/",
+        "checkpoint": "/cnrm/recyf/Data/users/danjoul/ddpm_experiments/experiment/checkpoint/",
+        "working_dir" : "/cnrm/recyf/Data/users/danjoul/ddpm_experiments/experiment/"
     },
     "data_loading": {
         // these hyperparameters should not be changed : 
@@ -37,11 +37,11 @@
         ],
         "echeances": [6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36],
         // these hyperparameters can be changed : 
-        "interp": "r", //"r", "bl", "bc" or "c" (the last one should not work)
+        "interp": "bl", //"r", "bl", "bc" or "c" (the last one should not work)
         "params_in": ["u10", "v10"],
         "params_out": ["u10", "v10"],
         "static_fields": [],
-        "config": "optimisation" // "optimisation" or "test" 
+        "config": "test" // "optimisation" or "test" 
     },
     "preprocessing": {
         "normalisation": "standardisation" //"satndardisation", "normalisation", "minmax" or "mean" 
@@ -91,14 +91,16 @@
             "type": "adam",
             "lr": 1e-4
         },
-        "n_iter": 1,
-        "val_freq": 1,//1e4
+        "n_iter": 100000,
+        "val_freq": 1000,//1e4
         "save_checkpoint_freq": 1000,
-        "print_freq": 1,
-        "data_len": 1
+        "print_freq": 1000,
+        "data_len": 50
+        // "n_epochs": 100
 
     },
     "inference": {
-        "print_freq": 1
+        "print_freq": 3,
+        "data_len": 100
     }
 }

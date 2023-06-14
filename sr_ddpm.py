@@ -12,6 +12,8 @@ import core.metrics as Metrics
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
+import math
+from time import perf_counter
 
 
 
@@ -59,8 +61,8 @@ if __name__ == "__main__":
 
 
     train_loader = Data.create_dataloader(train_ds, training_opt=opt["training"], phase="train")
-    valid_loader = Data.create_dataloader(valid_ds, training_opt=opt["training"])
-    test_loader  = Data.create_dataloader(test_ds, training_opt=opt["training"])
+    # valid_loader = Data.create_dataloader(valid_ds, training_opt=opt["training"])
+    # test_loader  = Data.create_dataloader(test_ds, training_opt=opt["training"])
     logger.info('Initial Dataset Finished')
 
     # for i, val_data in enumerate(valid_loader):
@@ -74,7 +76,6 @@ if __name__ == "__main__":
     diffusion = Model.create_model(opt)
     logger.info('Initial Model Finished')
 
-
     # Training
     current_step = diffusion.begin_step
     current_epoch = diffusion.begin_epoch
@@ -85,6 +86,8 @@ if __name__ == "__main__":
 
     val_steps = []
     val_loss = []
+    mse = math.inf
+    pred_mse = math.inf
     while current_step < n_iter:
         current_epoch += 1
         for _, train_data in enumerate(train_loader):
@@ -128,13 +131,20 @@ if __name__ == "__main__":
                     logger.info("[mae, mse]: [{:.3f}, {:.3f}]".format(mae, mse))
 
                     # intermediate image plot
+                    print(hr_img.shape, sr_img.shape)
                     fig, ax = plt.subplots()
-                    im = ax.imshow(sr_img[0, :, :])
+                    im = ax.imshow(sr_img[:, :, 0])
                     fig.colorbar(im, ax=ax)
                     plt.savefig(opt["path"]["results"] + "{}_{:.2f}.png".format(current_step, mse))
 
                     val_loss.append(mse)
                     val_steps.append(current_step)
+
+                    # save best model
+                    if mse < pred_mse:
+                        diffusion.save_best_model()
+                    pred_mse = mse
+
 
                 diffusion.set_new_noise_schedule(
                     opt['model']['beta_schedule']['train'], schedule_phase='train')
@@ -143,6 +153,7 @@ if __name__ == "__main__":
             if current_step % opt["training"]["save_checkpoint_freq"] == 0:
                 logger.info('Saving models and training states.')
                 diffusion.save_network(current_epoch, current_step)
+
 
     # save model
     logger.info('End of training.')
@@ -155,22 +166,32 @@ if __name__ == "__main__":
     plt.xlabel('iter')
     plt.savefig(opt["path"]["working_dir"] + 'RMSE_curve.png')
 
+    # load best model
+    load_path = os.path.join(opt['path']['checkpoint'], 'best_model.pth')
+    diffusion.load_best_model(load_path)
+
     # inference
     y_pred_df = y_test_df.copy()
     channels = get_arrays_cols(y_pred_df)
 
     diffusion.set_new_noise_schedule(opt['model']['beta_schedule']['val'], schedule_phase='val')
+
+    indices = range(opt["inference"]["data_len"])
+    test_subset = torch.utils.data.Subset(test_ds, indices)
+    test_loader = Data.create_dataloader(test_subset)
     for i, test_data in enumerate(test_loader):
+
         diffusion.feed_data(test_data)
         diffusion.test(continous=False)
-        out_sr = diffusion.SR.cpu().numpy()
+
+        sr_img = Metrics.tensor2image(diffusion.SR)
         for i_c, c in enumerate(channels):
-            y_pred_df[c][i] = out_sr[i_c, :, :]
+            y_pred_df[c][i] = sr_img[:, :, i_c]
 
         # image plot
         if i % opt["inference"]["print_freq"] == 0:
             fig, ax = plt.subplots()
-            im = ax.imshow(out_sr[0, :, :])
+            im = ax.imshow(sr_img[:, :, 0])
             fig.colorbar(im, ax=ax)
             plt.savefig(opt["path"]["results"] + "image_{}.png".format(i))
 
