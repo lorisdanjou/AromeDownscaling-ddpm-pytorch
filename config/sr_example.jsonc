@@ -4,12 +4,14 @@
         0
     ],
     "path": {
-        "experiments": "/cnrm/recyf/Data/users/danjoul/ddpm_experiments/infer2/",
-        "results": "/cnrm/recyf/Data/users/danjoul/ddpm_experiments/infer2/results/",
-        "log": "/cnrm/recyf/Data/users/danjoul/ddpm_experiments/infer2/logs/",
-        "checkpoint": "/cnrm/recyf/Data/users/danjoul/ddpm_experiments/infer2/checkpoint/",
-        "working_dir" : "/cnrm/recyf/Data/users/danjoul/ddpm_experiments/infer2/",
-        "resume_state": "/cnrm/recyf/Data/users/danjoul/ddpm_experiments/base/I100000_E118" 
+        // "experiments": "/cnrm/recyf/Data/users/danjoul/ddpm_experiments/expe3/",
+        "log": "/cnrm/recyf/Data/users/danjoul/ddpm_experiments/expe3/logs/",
+        "checkpoint": "/cnrm/recyf/Data/users/danjoul/ddpm_experiments/expe3/checkpoint/",
+        "working_dir" : "/cnrm/recyf/Data/users/danjoul/ddpm_experiments/expe3/",
+        "tb_logger":"/cnrm/recyf/Data/users/danjoul/ddpm_experiments/tb_logger/",
+        "eval_results" : "/cnrm/recyf/Data/users/danjoul/ddpm_experiments/expe3/eval_results/",
+        "infer_results": "/cnrm/recyf/Data/users/danjoul/ddpm_experiments/expe3/infer_results/"
+        // "resume_state": "/cnrm/recyf/Data/users/danjoul/ddpm_experiments/base/I100000_E118" 
     },
     "data_loading": {
         // these hyperparameters should not be changed : 
@@ -95,13 +97,14 @@
         "n_iter": 100000,
         "val_freq": 1000,//1e4
         "save_checkpoint_freq": 1000,
-        "print_freq": 1000,
+        "print_freq": 500,
         "data_len": 50
         // "n_epochs": 100
 
     },
     "inference": {
-        "print_freq": 3,
-        "data_len": 100
+        "print_freq": 5,
+        "save_freq": 10,
+        "data_len": 200
     }
 }

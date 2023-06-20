@@ -64,12 +64,14 @@ if __name__ == "__main__":
     logger.info('Initial Model Finished')
 
     # load best model
-    # load_path = opt['path']['resume_state']
     diffusion.load_network()
 
     # inference
-    y_pred_df = y_test_df.copy()
-    channels = get_arrays_cols(y_pred_df)
+    y_pred_df = pd.DataFrame(
+        [],
+        columns=y_test_df.columns
+    )
+    channels = get_arrays_cols(y_test_df)
 
     diffusion.set_new_noise_schedule(opt['model']['beta_schedule']['val'], schedule_phase='val')
 
@@ -78,25 +80,37 @@ if __name__ == "__main__":
     test_loader = Data.create_dataloader(test_subset)
     for i, test_data in enumerate(test_loader):
 
+        t3 = perf_counter()
         diffusion.feed_data(test_data)
         diffusion.test(continous=False)
+        t4 = perf_counter()
+
+        if opt["benchmark"]:
+            logger.info("Inference time: {:.2f}s".format(t4 - t3))
 
         sr_img = Metrics.tensor2image(diffusion.SR)
+        y_pred_i = [y_test_df.dates.iloc[i], y_test_df.echeances.iloc[i]]
         for i_c, c in enumerate(channels):
-            y_pred_df[c][i] = sr_img[:, :, i_c]
+            # y_pred_df[c][i] = sr_img[:, :, i_c]
+            y_pred_i.append(sr_img[:, :, i_c])
+        y_pred_df.loc[len(y_pred_df)] = y_pred_i
+
+        if i % opt["inference"]["save_freq"] == 0:
+            y_pred_df.to_pickle(opt["path"]["working_dir"] + 'y_pred_norm.csv')
+            logger.info("Step {}: results saved.".format(i))
 
         # image plot
         if i % opt["inference"]["print_freq"] == 0:
             fig, ax = plt.subplots()
             im = ax.imshow(sr_img[:, :, 0])
             fig.colorbar(im, ax=ax)
-            plt.savefig(opt["path"]["results"] + "image_{}.png".format(i))
+            plt.savefig(opt["path"]["infer_results"] + "image_{}.png".format(i))
 
-
+        
 
     y_pred_df = destandardisation(y_pred_df, opt["path"]["working_dir"])
     y_pred_df = crop(y_pred_df)
 
-    y_pred_df.to_pickle(opt["path"]["results"] + 'y_pred.csv')
+    y_pred_df.to_pickle(opt["path"]["working_dir"] + 'y_pred.csv')
 
     logger.info("End of inference.")

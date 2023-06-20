@@ -1,0 +1,11 @@
+numpy
+pandas
+tqdm
+lmdb
+opencv-python
+pillow
+tensorboardx
+matplotplib
+scikit-image
+scikit-learn
+

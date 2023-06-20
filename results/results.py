@@ -6,6 +6,7 @@ import scipy.stats as sc
 from skimage.metrics import structural_similarity
 from metrics4arome.spectrum_analysis import *
 from metrics4arome.length_scales import *
+from os.path import exists
 
 def get_ind_terre_mer_500m():
     filepath = '/cnrm/recyf/Data/users/danjoul/dataset/static_G9KP_SURFIND.TERREMER.npy'
@@ -47,68 +48,51 @@ def load_results(working_dir, dates_test, echeances, resample, data_test_locatio
         'y_test' : []}
     )
     for i_d, d in enumerate(dates_test):
-        # Load X_test :
-        try:
-            if resample == 'c':
-                filepath_X_test = data_test_location + 'oper_c_' + d.isoformat() + 'Z_' + param + '.npy'
-            elif resample == 'r':
-                filepath_X_test = data_test_location + 'oper_r_' + d.isoformat() + 'Z_' + param + '.npy'
-            elif resample == 'bl':
-                filepath_X_test = data_test_location + 'oper_bl_' + d.isoformat() + 'Z_' + param + '.npy'
-            elif resample == 'bc':
-                filepath_X_test = data_test_location + 'oper_bc_' + d.isoformat() + 'Z_' + param + '.npy'
+
+        # load X_test
+        if resample == 'c':
+            filepath_X_test = data_test_location + 'oper_c_' + d.isoformat() + 'Z_' + param + '.npy'
+        elif resample == 'r':
+            filepath_X_test = data_test_location + 'oper_r_' + d.isoformat() + 'Z_' + param + '.npy'
+        elif resample == 'bl':
+            filepath_X_test = data_test_location + 'oper_bl_' + d.isoformat() + 'Z_' + param + '.npy'
+        elif resample == 'bc':
+            filepath_X_test = data_test_location + 'oper_bc_' + d.isoformat() + 'Z_' + param + '.npy'
+        else:
+            raise NotImplementedError
+
+        filepath_baseline = baseline_location + 'GG9B_' + d.isoformat() + 'Z_' + param + '.npy'
+
+        filepath_y_test = data_test_location + 'G9L1_' + d.isoformat() + 'Z_' + param + '.npy'
+
+        if exists(filepath_X_test):
+            if exists(filepath_baseline):
+                if exists(filepath_y_test):
+                    X_test = np.load(filepath_X_test)
+                    if resample in ['bl', 'bc']:
+                        X_test = np.pad(X_test, ((5,4), (2,5), (0,0)), mode='edge')
+                    baseline = np.load(filepath_baseline)
+                    y_test = np.load(filepath_y_test)
+
+                    for i_ech, ech in enumerate(echeances):
+
+                        y_pred = y_pred_df[y_pred_df.dates == d.isoformat()][y_pred_df.echeances == ech][param]
+                        if len(y_pred) > 0:
+                            results_df.loc[len(results_df)] = [
+                                dates_test[i_d].isoformat(),
+                                echeances[i_ech],
+                                X_test[:, :, i_ech],
+                                baseline[:, :, i_ech],
+                                y_pred.iloc[0],
+                                y_test[:, :, i_ech]
+                            ]
+                else:
+                    print('missing day (y): ' + d.isoformat())
             else:
-                raise ValueError("resample mal défini")
-        # try:
-        #     if resample == 'c':
-        #         filepath_X_test = data_test_location + 'oper_c_' + d.isoformat() + 'Z_' + param + '.npy'
-        #     else:
-        #         filepath_X_test = data_test_location + 'oper_r_' + d.isoformat() + 'Z_' + param + '.npy'
-            X_test = np.load(filepath_X_test)
-            if resample in ['bl', 'bc']:
-                X_test = np.pad(X_test, ((5,4), (2,5), (0,0)), mode='edge')
-        except FileNotFoundError:
+                print('missing day (b): ' + d.isoformat())
+        else:
             print('missing day (X): ' + d.isoformat())
-            X_test = None
-
-        # Load baseline : 
-        # filepath_baseline = baseline_location + 'GG9B_' + d.isoformat() + 'Z_' + param + '.npy'
-        # baseline = np.load(filepath_baseline)
-        try:
-            filepath_baseline = baseline_location + 'GG9B_' + d.isoformat() + 'Z_' + param + '.npy'
-            baseline = np.load(filepath_baseline)
-        except FileNotFoundError:
-            print('missing day (b): ' + d.isoformat())
-            baseline = None
-
-        # Load y_test : 
-        try:
-            filepath_y_test = data_test_location + 'G9L1_' + d.isoformat() + 'Z_' + param + '.npy'
-            y_test = np.load(filepath_y_test)
-        except FileNotFoundError:
-            print('missing day (y): ' + d.isoformat())
-            y_test = None
-
-        for i_ech, ech in enumerate(echeances):
-            try:
-                results_d_ech = pd.DataFrame(
-                    {'dates' : [dates_test[i_d].isoformat()],
-                    'echeances' : [echeances[i_ech]],
-                    'X_test' : [X_test[:, :, i_ech]],
-                    'baseline' : [baseline[:, :, i_ech]],
-                    'y_pred' : y_pred_df[y_pred_df.dates == d.isoformat()][y_pred_df.echeances == ech][param].to_list(),
-                    'y_test' : [y_test[:, :, i_ech]]}
-                )
-            except TypeError:
-                results_d_ech = pd.DataFrame(
-                    {'dates' : [],
-                    'echeances' : [],
-                    'X_test' : [],
-                    'baseline' : [],
-                    'y_pred' : [],
-                    'y_test' : []}
-                )
-            results_df = pd.concat([results_df, results_d_ech])
+            
     return results_df.reset_index(drop=True)
 
 

@@ -41,12 +41,11 @@ dates_test = rangex([
 ])
 resample = 'bl'
 echeances = range(6, 37, 3)
-working_dir = '/cnrm/recyf/Data/users/danjoul/ddpm/experiments/test/'
+working_dir = '/cnrm/recyf/Data/users/danjoul/ddpm_experiments/expe3_infer2/'
 
 
 # ========== Load Data
 results_df = load_results(working_dir, dates_test, echeances, resample, data_test_location, baseline_location, param='u10')
-results_df = results_df.iloc[0:100]
 print(len(results_df))
 
 
@@ -54,10 +53,10 @@ print(len(results_df))
 plot_results(results_df, 'u10', working_dir)
 # plot_score_maps(results_df, mae, 'mae', working_dir)
 # plot_distrib(results_df_u, mse, 'mse', working_dir)
-# plot_distrib(results_df, mae, 'mae', working_dir)
+plot_distrib(results_df, mae, 'mae', working_dir)
 # plot_distrib(results_df, ssim, 'ssim', working_dir)
 # plot_datewise_wasserstein_distance_distrib(results_df, working_dir)
-# plot_PSDs(results_df, working_dir)
+plot_PSDs(results_df, working_dir)
 plot_unique_score_map(results_df, mae, 'mae', working_dir)
 plot_unique_score_map(results_df, biais, 'biais', working_dir)
 plot_cor_len(results_df, working_dir)
