@@ -1,7 +1,6 @@
 import numpy as np
 from os.path import exists
 import pandas as pd
-from bronx.stdtypes.date import daterangex as rangex
 
 
 def get_shape_500m():

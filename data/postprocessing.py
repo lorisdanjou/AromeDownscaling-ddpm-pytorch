@@ -1,6 +1,8 @@
 import numpy as np
 import pandas as pd
-import data.load_data as ld
+import load_data as ld
+from bronx.stdtypes.date import daterangex as rangex
+# from data.load_data import load_X, load_y
 
 def min_max_scale(x, x_ref):
     normalized_x = (x - x.min()) / (x.max() - x.min())
@@ -33,6 +35,9 @@ if __name__ == "__main__":
     import argparse
     import json
     from collections import OrderedDict
+    import os
+    import warnings
+    warnings.filterwarnings("ignore")
     
     parser = argparse.ArgumentParser()
     parser.add_argument('-c', '--config', type=str, default='config/sr_ddpm.jsonc',
@@ -53,9 +58,66 @@ if __name__ == "__main__":
 
 
     # load X_test & y_test
+    data_train_location  = opt["data_loading"]["data_train_location"]
+    data_valid_location  = opt["data_loading"]["data_valid_location"]
+    data_test_location   = opt["data_loading"]["data_test_location"]
+    data_static_location = opt["data_loading"]["data_static_location"]
+    dates_train          = rangex(opt["data_loading"]["dates_train"])
+    dates_valid          = rangex(opt["data_loading"]["dates_valid"])
+    dates_test           = rangex(opt["data_loading"]["dates_test"])
+    echeances            = opt["data_loading"]["echeances"]
+    params_in            = opt["data_loading"]["params_in"]
+    params_out           = opt["data_loading"]["params_out"]
+    static_fields        = opt["data_loading"]["static_fields"]
+    interp               = opt["data_loading"]["interp"]
+
+    if opt["data_loading"]["config"] == "optimisation": # the test dataset is not used
+        X_test_df = ld.load_X(
+            dates_valid, 
+            echeances,
+            params_in,
+            data_valid_location,
+            data_static_location,
+            static_fields = static_fields,
+            resample=interp
+        )
+
+        y_test_df = ld.load_y(
+            dates_valid,
+            echeances,
+            params_out,
+            data_valid_location
+        )
+
+    elif opt["data_loading"]["config"] =="test": # the whole dataset is used
+        X_test_df = ld.load_X(
+            dates_test, 
+            echeances,
+            params_in,
+            data_test_location,
+            data_static_location,
+            static_fields = static_fields,
+            resample=interp
+        )
+
+        y_test_df = ld.load_y(
+            dates_test,
+            echeances,
+            params_out,
+            data_test_location
+        )
+
+    else:
+        raise NotImplementedError
 
     # load y_pred
+    y_pred_path = os.path.join(opt["path"]["working_dir"], "y_pred.csv")
+    y_pred_df = pd.read_pickle(y_pred_path)
 
     # postprocess y_pred
+    postproc_opt = opt["postprocessing"]
+    y_pred_postproc_df = postprocess_df(y_pred_df, X_test_df, postproc_opt)
 
     # save y_pred
+    y_postproc_path = os.path.join(opt["path"]["working_dir"], "y_pred_postproc.csv")
+    pd.to_pickle(y_pred_postproc_df, y_postproc_path)
