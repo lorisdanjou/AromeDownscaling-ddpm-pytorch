@@ -1,8 +1,7 @@
 import numpy as np
 import pandas as pd
-import load_data as ld
 from bronx.stdtypes.date import daterangex as rangex
-# from data.load_data import load_X, load_y
+from data.load_data import load_X, load_y, get_arrays_cols
 
 def min_max_scale(x, x_ref):
     normalized_x = (x - x.min()) / (x.max() - x.min())
@@ -17,7 +16,7 @@ def postprocess_df(df, df_ref, postproc_opt):
         [],
         columns=df.columns
     )
-    channels = ld.get_arrays_cols(df)
+    channels = get_arrays_cols(df)
     for i in range(len(df)):
         row = [df.dates.iloc[i], df.echeances.iloc[i]]
         for i_c, c in enumerate(channels):
@@ -72,7 +71,7 @@ if __name__ == "__main__":
     interp               = opt["data_loading"]["interp"]
 
     if opt["data_loading"]["config"] == "optimisation": # the test dataset is not used
-        X_test_df = ld.load_X(
+        X_test_df = load_X(
             dates_valid, 
             echeances,
             params_in,
@@ -82,7 +81,7 @@ if __name__ == "__main__":
             resample=interp
         )
 
-        y_test_df = ld.load_y(
+        y_test_df = load_y(
             dates_valid,
             echeances,
             params_out,
@@ -90,7 +89,7 @@ if __name__ == "__main__":
         )
 
     elif opt["data_loading"]["config"] =="test": # the whole dataset is used
-        X_test_df = ld.load_X(
+        X_test_df = load_X(
             dates_test, 
             echeances,
             params_in,
@@ -100,7 +99,7 @@ if __name__ == "__main__":
             resample=interp
         )
 
-        y_test_df = ld.load_y(
+        y_test_df = load_y(
             dates_test,
             echeances,
             params_out,

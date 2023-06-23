@@ -3,15 +3,16 @@
     "gpu_ids": [
         0
     ],
+    "benchmark": false,
     "path": {
         // "experiments": "/cnrm/recyf/Data/users/danjoul/ddpm_experiments/expe3/",
-        "log": "/cnrm/recyf/Data/users/danjoul/ddpm_experiments/expe3/logs/",
-        "checkpoint": "/cnrm/recyf/Data/users/danjoul/ddpm_experiments/expe3/checkpoint/",
-        "working_dir" : "/cnrm/recyf/Data/users/danjoul/ddpm_experiments/expe3/",
-        "tb_logger":"/cnrm/recyf/Data/users/danjoul/ddpm_experiments/tb_logger/",
-        "eval_results" : "/cnrm/recyf/Data/users/danjoul/ddpm_experiments/expe3/eval_results/",
-        "infer_results": "/cnrm/recyf/Data/users/danjoul/ddpm_experiments/expe3/infer_results/"
-        // "resume_state": "/cnrm/recyf/Data/users/danjoul/ddpm_experiments/base/I100000_E118" 
+        // "resume_state": "/cnrm/recyf/Data/users/danjoul/ddpm_experiments/expe3/checkpoint/I68000_E80",
+        "log": "/cnrm/recyf/Data/users/danjoul/ddpm_experiments/T1000/logs/",
+        "checkpoint": "/cnrm/recyf/Data/users/danjoul/ddpm_experiments/T1000/checkpoint/",
+        "working_dir" : "/cnrm/recyf/Data/users/danjoul/ddpm_experiments/T1000/",
+        "tb_logger":"/cnrm/recyf/Data/users/danjoul/ddpm_experiments/T1000/tb_logger/",
+        "eval_results" : "/cnrm/recyf/Data/users/danjoul/ddpm_experiments/T1000/eval_results/",
+        "infer_results": "/cnrm/recyf/Data/users/danjoul/ddpm_experiments/T1000/infer_results/"
     },
     "data_loading": {
         // these hyperparameters should not be changed : 
@@ -47,7 +48,7 @@
         "config": "test" // "optimisation" or "test" 
     },
     "preprocessing": {
-        "normalisation": "standardisation" //"satndardisation", "normalisation", "minmax" or "mean" 
+        "normalisation": "standardisation" //"standardisation", "normalisation", "minmax" or "mean" 
     },
     "model": {
         "which_model_G": "ddpm",
@@ -74,19 +75,20 @@
         "beta_schedule": { // use manual beta_schedule for acceleration
             "train": {
                 "schedule": "linear",
-                "n_timestep": 2000,
+                "n_timestep": 1000,
                 "linear_start": 1e-6,
                 "linear_end": 1e-2
             },
             "val": {
                 "schedule": "linear",
-                "n_timestep": 2000,
+                "n_timestep": 1000,
                 "linear_start": 1e-6,
                 "linear_end": 1e-2
             }
         }
     },
     "training": {
+        "enable": true,
         "batch_size": 4,
         "num_workers": 8,
         "use_shuffle": true,
@@ -95,16 +97,22 @@
             "lr": 1e-4
         },
         "n_iter": 100000,
-        "val_freq": 1000,//1e4
-        "save_checkpoint_freq": 1000,
+        "val_freq": 2000,//1e4
+        "save_checkpoint_freq": 2000,
         "print_freq": 500,
         "data_len": 50
         // "n_epochs": 100
 
     },
     "inference": {
+        "enable": true,
         "print_freq": 5,
         "save_freq": 10,
-        "data_len": 200
+        "i_min": 0, // included
+        "i_max": 200, // not included
+        "step": 1
+    },
+    "postprocessing": {
+        "method": "minmax" //"minmax" or "std"
     }
 }

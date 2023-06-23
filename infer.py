@@ -53,8 +53,7 @@ if __name__ == "__main__":
         X_test_df,
         y_test_df
     )
-
-
+    
     test_ds  = Data.create_dataset(X_test_df, y_test_df)
 
     logger.info('Initial Dataset Finished')
@@ -63,8 +62,12 @@ if __name__ == "__main__":
     diffusion = Model.create_model(opt)
     logger.info('Initial Model Finished')
 
-    # load best model
-    diffusion.load_network()
+    # load weights
+    if opt["path"]["resume_state"] is not None:
+        diffusion.load_network()
+    else:
+        load_path = os.path.join(opt['path']['checkpoint'], 'best_model.pth')
+        diffusion.load_best_model(load_path)
 
     # inference
     y_pred_df = pd.DataFrame(
@@ -75,7 +78,7 @@ if __name__ == "__main__":
 
     diffusion.set_new_noise_schedule(opt['model']['beta_schedule']['val'], schedule_phase='val')
 
-    indices = range(opt["inference"]["data_len"])
+    indices = range(opt["inference"]["i_min"], opt["inference"]["i_max"], opt["inference"]["step"])
     test_subset = torch.utils.data.Subset(test_ds, indices)
     test_loader = Data.create_dataloader(test_subset)
     for i, test_data in enumerate(test_loader):

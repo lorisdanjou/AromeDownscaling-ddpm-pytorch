@@ -6,7 +6,7 @@ import logging
 from tensorboardX import SummaryWriter
 import data as Data
 from data.load_data import get_arrays_cols, crop
-from data.normalisations import destandardisation
+from data.normalisations import destandardisation, denormalisation, min_max_denorm, mean_denorm
 import model as Model
 import core.metrics as Metrics
 import numpy as np
@@ -189,7 +189,7 @@ if __name__ == "__main__":
 
         diffusion.set_new_noise_schedule(opt['model']['beta_schedule']['val'], schedule_phase='val')
 
-        indices = range(opt["inference"]["data_len"])
+        indices = range(opt["inference"]["i_min"], opt["inference"]["i_max"], opt["inference"]["step"])
         test_subset = torch.utils.data.Subset(test_ds, indices)
         test_loader = Data.create_dataloader(test_subset)
         for i, test_data in enumerate(test_loader):
@@ -221,10 +221,17 @@ if __name__ == "__main__":
                 plt.savefig(opt["path"]["infer_results"] + "image_{}.png".format(i))
 
             
-
-        y_pred_df = destandardisation(y_pred_df, opt["path"]["working_dir"])
+        if opt["preprocessing"]["normalisation"] is not None:
+            if opt["preprocessing"]["normalisation"] == "standardisation":
+                y_pred_df = destandardisation(y_pred_df, opt["path"]["working_dir"])
+            elif opt["preprocessing"]["normalisation"] == "normalisation":
+                y_pred_df = denormalisation(y_pred_df, opt["path"]["working_dir"])
+            elif opt["preprocessing"]["normalisation"] == "minmax":
+                y_pred_df = min_max_denorm(y_pred_df, opt["path"]["working_dir"])
+            elif opt["preprocessing"]["normalisation"] == "mean":
+                y_pred_df = mean_denorm(y_pred_df, opt["path"]["working_dir"])
+        
         y_pred_df = crop(y_pred_df)
-
         y_pred_df.to_pickle(opt["path"]["working_dir"] + 'y_pred.csv')
 
         logger.info("End of inference.")

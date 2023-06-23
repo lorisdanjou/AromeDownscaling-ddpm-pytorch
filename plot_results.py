@@ -41,7 +41,7 @@ dates_test = rangex([
 ])
 resample = 'bl'
 echeances = range(6, 37, 3)
-working_dir = '/cnrm/recyf/Data/users/danjoul/ddpm_experiments/expe3_infer2/'
+working_dir = '/cnrm/recyf/Data/users/danjoul/ddpm_experiments/T1000_2/'
 
 
 # ========== Load Data
@@ -53,7 +53,7 @@ print(len(results_df))
 plot_results(results_df, 'u10', working_dir)
 # plot_score_maps(results_df, mae, 'mae', working_dir)
 # plot_distrib(results_df_u, mse, 'mse', working_dir)
-plot_distrib(results_df, mae, 'mae', working_dir)
+# plot_distrib(results_df, mae, 'mae', working_dir)
 # plot_distrib(results_df, ssim, 'ssim', working_dir)
 # plot_datewise_wasserstein_distance_distrib(results_df, working_dir)
 plot_PSDs(results_df, working_dir)

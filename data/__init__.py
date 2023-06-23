@@ -131,32 +131,33 @@ def preprocess_data(opt, X_train_df, y_train_df, X_valid_df, y_valid_df, X_test_
     X_test_df , y_test_df  = ld.pad(X_test_df),  ld.pad(y_test_df)
 
     # Normalisation:
-    if preproc_opt["normalisation"] == "standardisation":
-        norm.get_mean(X_train_df, output_dir)
-        norm.get_std(X_train_df, output_dir)
-        X_train_df, y_train_df = norm.standardisation(X_train_df, output_dir), norm.standardisation(y_train_df, output_dir)
-        X_valid_df, y_valid_df = norm.standardisation(X_valid_df, output_dir), norm.standardisation(y_valid_df, output_dir)
-        X_test_df , y_test_df  = norm.standardisation(X_test_df, output_dir) , norm.standardisation(y_test_df, output_dir)
-    elif preproc_opt["normalisation"] == "normalisation":
-        norm.get_max_abs(X_train_df, output_dir)
-        X_train_df, y_train_df = norm.normalisation(X_train_df, output_dir), norm.normalisation(y_train_df, output_dir)
-        X_valid_df, y_valid_df = norm.normalisation(X_valid_df, output_dir), norm.normalisation(y_valid_df, output_dir)
-        X_test_df , y_test_df  = norm.normalisation(X_test_df, output_dir) , norm.normalisation(y_test_df, output_dir)
-    elif preproc_opt["normalisation"] == "minmax":
-        norm.get_min(X_train_df, output_dir)
-        norm.get_max(X_train_df, output_dir)
-        X_train_df, y_train_df = norm.min_max_norm(X_train_df, output_dir), norm.min_max_norm(y_train_df, output_dir)
-        X_valid_df, y_valid_df = norm.min_max_norm(X_valid_df, output_dir), norm.min_max_norm(y_valid_df, output_dir)
-        X_test_df , y_test_df  = norm.min_max_norm(X_test_df, output_dir) , norm.min_max_norm(y_test_df, output_dir)
-    elif preproc_opt["normalisation"] == "mean":
-        norm.get_min(X_train_df, output_dir)
-        norm.get_max(X_train_df, output_dir)
-        norm.get_mean(X_train_df, output_dir)
-        X_train_df, y_train_df = norm.mean_norm(X_train_df, output_dir), norm.mean_norm(y_train_df, output_dir)
-        X_valid_df, y_valid_df = norm.mean_norm(X_valid_df, output_dir), norm.mean_norm(y_valid_df, output_dir)
-        X_test_df , y_test_df  = norm.mean_norm(X_test_df, output_dir) , norm.mean_norm(y_test_df, output_dir)
-    else:
-        raise NotImplementedError
+    if preproc_opt["normalisation"] is not None:
+        if preproc_opt["normalisation"] == "standardisation":
+            norm.get_mean(X_train_df, output_dir)
+            norm.get_std(X_train_df, output_dir)
+            X_train_df, y_train_df = norm.standardisation(X_train_df, output_dir), norm.standardisation(y_train_df, output_dir)
+            X_valid_df, y_valid_df = norm.standardisation(X_valid_df, output_dir), norm.standardisation(y_valid_df, output_dir)
+            X_test_df , y_test_df  = norm.standardisation(X_test_df, output_dir) , norm.standardisation(y_test_df, output_dir)
+        elif preproc_opt["normalisation"] == "normalisation":
+            norm.get_max_abs(X_train_df, output_dir)
+            X_train_df, y_train_df = norm.normalisation(X_train_df, output_dir), norm.normalisation(y_train_df, output_dir)
+            X_valid_df, y_valid_df = norm.normalisation(X_valid_df, output_dir), norm.normalisation(y_valid_df, output_dir)
+            X_test_df , y_test_df  = norm.normalisation(X_test_df, output_dir) , norm.normalisation(y_test_df, output_dir)
+        elif preproc_opt["normalisation"] == "minmax":
+            norm.get_min(X_train_df, output_dir)
+            norm.get_max(X_train_df, output_dir)
+            X_train_df, y_train_df = norm.min_max_norm(X_train_df, output_dir), norm.min_max_norm(y_train_df, output_dir)
+            X_valid_df, y_valid_df = norm.min_max_norm(X_valid_df, output_dir), norm.min_max_norm(y_valid_df, output_dir)
+            X_test_df , y_test_df  = norm.min_max_norm(X_test_df, output_dir) , norm.min_max_norm(y_test_df, output_dir)
+        elif preproc_opt["normalisation"] == "mean":
+            norm.get_min(X_train_df, output_dir)
+            norm.get_max(X_train_df, output_dir)
+            norm.get_mean(X_train_df, output_dir)
+            X_train_df, y_train_df = norm.mean_norm(X_train_df, output_dir), norm.mean_norm(y_train_df, output_dir)
+            X_valid_df, y_valid_df = norm.mean_norm(X_valid_df, output_dir), norm.mean_norm(y_valid_df, output_dir)
+            X_test_df , y_test_df  = norm.mean_norm(X_test_df, output_dir) , norm.mean_norm(y_test_df, output_dir)
+        else:
+            raise NotImplementedError
 
     return X_train_df, y_train_df, X_valid_df, y_valid_df, X_test_df, y_test_df
 
