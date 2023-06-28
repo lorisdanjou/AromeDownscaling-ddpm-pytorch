@@ -98,7 +98,8 @@ def define_G(opt):
         res_blocks=model_opt['unet']['res_blocks'],
         dropout=model_opt['unet']['dropout'],
         img_h=model_opt['diffusion']['img_h'],
-        img_w=model_opt['diffusion']['img_w']
+        img_w=model_opt['diffusion']['img_w'],
+        batch_norm=model_opt["unet"]["batch_norm"]
     )
     netG = diffusion.GaussianDiffusion(
         model,

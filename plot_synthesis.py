@@ -44,7 +44,7 @@ dates_test = rangex([
     ])
 param = 'u10'
 echeances = range(6, 37, 3)
-output_dir = '/cnrm/recyf/Data/users/danjoul/unet_experiments/wind/losses/custom_loss/eps/'
+output_dir = '/cnrm/recyf/Data/users/danjoul/ddpm_experiments/'
 
 # ========== Load results
 # expes_names = ['basic', 'standardisation', 'min-max', 'mean']
@@ -85,19 +85,13 @@ output_dir = '/cnrm/recyf/Data/users/danjoul/unet_experiments/wind/losses/custom
 #     load_results(base_dir + '0.7-mse/', dates_test, echeances, 'r', data_test_location, baseline_location, param=param),
 #     load_results(base_dir + '0.8-mse/', dates_test, echeances, 'r', data_test_location, baseline_location, param=param)
 # ]
-base_dir = '/cnrm/recyf/Data/users/danjoul/unet_experiments/wind/losses/custom_loss/'
-expes_names = ['mse', '5', '8', '10', '13', '14', '15', '16', '17', '20']
+base_dir = '/cnrm/recyf/Data/users/danjoul/ddpm_experiments/'
+expes_names = ["base", "base_postproc_std", "T1000", "without_norm"]
 expes_results = [
-    load_results('/cnrm/recyf/Data/users/danjoul/unet_experiments/wind/losses/mse/', dates_test, echeances, 'r', data_test_location, baseline_location, param=param),
-    load_results(base_dir + '0.6-5/', dates_test, echeances, 'r', data_test_location, baseline_location, param=param),
-    load_results(base_dir + '0.6-8/', dates_test, echeances, 'r', data_test_location, baseline_location, param=param),
-    load_results(base_dir + '0.6-10/', dates_test, echeances, 'r', data_test_location, baseline_location, param=param),
-    load_results(base_dir + '0.6-13/', dates_test, echeances, 'r', data_test_location, baseline_location, param=param),
-    load_results(base_dir + '0.6-14/', dates_test, echeances, 'r', data_test_location, baseline_location, param=param),
-    load_results(base_dir + '0.6-15/', dates_test, echeances, 'r', data_test_location, baseline_location, param=param),
-    load_results(base_dir + '0.6-16/', dates_test, echeances, 'r', data_test_location, baseline_location, param=param),
-    load_results(base_dir + '0.6-17/', dates_test, echeances, 'r', data_test_location, baseline_location, param=param),
-    load_results(base_dir + '0.6-20/', dates_test, echeances, 'r', data_test_location, baseline_location, param=param)
+    load_results(base_dir + 'base/', dates_test, echeances, 'bl', data_test_location, baseline_location, param=param),
+    load_results(base_dir + 'postproc_std/', dates_test, echeances, 'bl', data_test_location, baseline_location, param=param),
+    load_results(base_dir + 'T1000_2/', dates_test, echeances, 'bl', data_test_location, baseline_location, param=param),
+    load_results(base_dir + 'without_norm/', dates_test, echeances, 'bl', data_test_location, baseline_location, param=param)
 ]
 # expes_names = ['0', '0.1', '0.2', '0.3', '0.4', '0.5']
 # expes_results = [
@@ -124,13 +118,13 @@ expes_results = [
 
 # ========== Graphs
 # print('maps')
-# synthesis_maps(expes_names, expes_results, output_dir, full=True)
+synthesis_maps(expes_names, expes_results, output_dir, full=True)
 # print('score maps')
 # synthesis_score_maps(expes_names, expes_results, output_dir, mse, 'mse')
 # synthesis_score_maps(expes_names, expes_results, output_dir, mae, 'mae')
 # synthesis_score_maps(expes_names, expes_results, output_dir, biais, 'biais')
 # synthesis_score_maps(expes_names, expes_results, output_dir, ssim, 'ssim', cmap='plasma')
-# synthesis_unique_score_map(expes_names, expes_results, output_dir, mae, 'mae')
+synthesis_unique_score_map(expes_names, expes_results, output_dir, mae, 'mae')
 # synthesis_unique_score_map(expes_names, expes_results, output_dir, mse, 'mse')
 # synthesis_unique_score_map(expes_names, expes_results, output_dir, biais, 'biais')
 # synthesis_unique_score_map(expes_names, expes_results, output_dir, ssim, 'ssim', cmap='plasma')

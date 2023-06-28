@@ -76,7 +76,7 @@ class Block(nn.Module):
 
 
 class ResnetBlock(nn.Module):
-    def __init__(self, dim, dim_out, time_emb_dim=None, dropout=0, norm_groups=32):
+    def __init__(self, dim, dim_out, time_emb_dim=None, dropout=0, norm_groups=32, batch_norm=False):
         super().__init__()
         self.mlp = nn.Sequential(
             Swish(),
@@ -87,8 +87,13 @@ class ResnetBlock(nn.Module):
         self.block2 = Block(dim_out, dim_out, groups=norm_groups, dropout=dropout)
         self.res_conv = nn.Conv2d(
             dim, dim_out, 1) if dim != dim_out else nn.Identity()
+        self.batch_norm = batch_norm
+        self.dim = dim
 
     def forward(self, x, time_emb):
+        if self.batch_norm:
+            bn = nn.BatchNorm2d(self.dim, device=x.device)
+            x = bn(x)
         h = self.block1(x)
         if exists(self.mlp):
             h += self.mlp(time_emb)[:, :, None, None]
@@ -96,52 +101,52 @@ class ResnetBlock(nn.Module):
         return h + self.res_conv(x)
 
 
-# class SelfAttention(nn.Module):
-#     def __init__(self, in_channel, n_head=1, norm_groups=32):
-#         super().__init__()
+class SelfAttention(nn.Module):
+    def __init__(self, in_channel, n_head=1, norm_groups=32):
+        super().__init__()
 
-#         self.n_head = n_head
+        self.n_head = n_head
 
-#         self.norm = nn.GroupNorm(norm_groups, in_channel)
-#         self.qkv = nn.Conv2d(in_channel, in_channel * 3, 1, bias=False)
-#         self.out = nn.Conv2d(in_channel, in_channel, 1)
+        self.norm = nn.GroupNorm(norm_groups, in_channel)
+        self.qkv = nn.Conv2d(in_channel, in_channel * 3, 1, bias=False)
+        self.out = nn.Conv2d(in_channel, in_channel, 1)
 
-#     def forward(self, input):
-#         batch, channel, height, width = input.shape
-#         n_head = self.n_head
-#         head_dim = channel // n_head
+    def forward(self, input):
+        batch, channel, height, width = input.shape
+        n_head = self.n_head
+        head_dim = channel // n_head
 
-#         norm = self.norm(input)
-#         qkv = self.qkv(norm).view(batch, n_head, head_dim * 3, height, width)
-#         query, key, value = qkv.chunk(3, dim=2)  # bhdyx
+        norm = self.norm(input)
+        qkv = self.qkv(norm).view(batch, n_head, head_dim * 3, height, width)
+        query, key, value = qkv.chunk(3, dim=2)  # bhdyx
 
-#         attn = torch.einsum(
-#             "bnchw, bncyx -> bnhwyx", query, key
-#         ).contiguous() / math.sqrt(channel)
-#         attn = attn.view(batch, n_head, height, width, -1)
-#         attn = torch.softmax(attn, -1)
-#         attn = attn.view(batch, n_head, height, width, height, width)
+        attn = torch.einsum(
+            "bnchw, bncyx -> bnhwyx", query, key
+        ).contiguous() / math.sqrt(channel)
+        attn = attn.view(batch, n_head, height, width, -1)
+        attn = torch.softmax(attn, -1)
+        attn = attn.view(batch, n_head, height, width, height, width)
 
-#         out = torch.einsum("bnhwyx, bncyx -> bnchw", attn, value).contiguous()
-#         out = self.out(out.view(batch, channel, height, width))
+        out = torch.einsum("bnhwyx, bncyx -> bnchw", attn, value).contiguous()
+        out = self.out(out.view(batch, channel, height, width))
 
-#         return out + input
+        return out + input
 
 
-# class ResnetBlocWithAttn(nn.Module):
-#     def __init__(self, dim, dim_out, *, time_emb_dim=None, norm_groups=32, dropout=0, with_attn=False):
-#         super().__init__()
-#         self.with_attn = with_attn
-#         self.res_block = ResnetBlock(
-#             dim, dim_out, time_emb_dim, norm_groups=norm_groups, dropout=dropout)
-#         if with_attn:
-#             self.attn = SelfAttention(dim_out, norm_groups=norm_groups)
+class ResnetBlocWithAttn(nn.Module):
+    def __init__(self, dim, dim_out, *, time_emb_dim=None, norm_groups=32, dropout=0, with_attn=False, batch_norm=False):
+        super().__init__()
+        self.with_attn = with_attn
+        self.res_block = ResnetBlock(
+            dim, dim_out, time_emb_dim, norm_groups=norm_groups, dropout=dropout, batch_norm=batch_norm)
+        if with_attn:
+            self.attn = SelfAttention(dim_out, norm_groups=norm_groups)
 
-#     def forward(self, x, time_emb):
-#         x = self.res_block(x, time_emb)
-#         if(self.with_attn):
-#             x = self.attn(x)
-#         return x
+    def forward(self, x, time_emb):
+        x = self.res_block(x, time_emb)
+        if(self.with_attn):
+            x = self.attn(x)
+        return x
 
 
 class UNet(nn.Module):
@@ -152,12 +157,13 @@ class UNet(nn.Module):
         inner_channel=32,
         norm_groups=32,
         channel_mults=(1, 2, 4, 8),
-        # attn_res=(8),
+        attn_res=[[28, 44]],
         res_blocks=3,
         dropout=0,
         with_time_emb=True,
         img_h = 224,
-        img_w = 272
+        img_w = 272,
+        batch_norm=False
     ):
         super().__init__()
 
@@ -182,11 +188,12 @@ class UNet(nn.Module):
                            kernel_size=3, padding=1)]
         for ind in range(num_mults):
             is_last = (ind == num_mults - 1)
-            # use_attn = (now_res in attn_res)
+            use_attn = ((now_res_h, now_res_w) in attn_res)
+            print(use_attn)
             channel_mult = inner_channel * channel_mults[ind]
             for _ in range(0, res_blocks):
-                downs.append(ResnetBlock(
-                    pre_channel, channel_mult, time_emb_dim=time_dim, norm_groups=norm_groups, dropout=dropout))
+                downs.append(ResnetBlocWithAttn(
+                    pre_channel, channel_mult, time_emb_dim=time_dim, norm_groups=norm_groups, dropout=dropout, with_attn=use_attn, batch_norm=batch_norm))
                 feat_channels.append(channel_mult)
                 pre_channel = channel_mult
             if not is_last:
@@ -197,20 +204,21 @@ class UNet(nn.Module):
         self.downs = nn.ModuleList(downs)
 
         self.mid = nn.ModuleList([
-            ResnetBlock(pre_channel, pre_channel, time_emb_dim=time_dim, norm_groups=norm_groups,
-                               dropout=dropout),
-            ResnetBlock(pre_channel, pre_channel, time_emb_dim=time_dim, norm_groups=norm_groups, 
-                                dropout=dropout)
+            ResnetBlocWithAttn(pre_channel, pre_channel, time_emb_dim=time_dim, norm_groups=norm_groups,
+                               dropout=dropout, batch_norm=batch_norm),
+            ResnetBlocWithAttn(pre_channel, pre_channel, time_emb_dim=time_dim, norm_groups=norm_groups, 
+                                dropout=dropout, batch_norm=batch_norm)
         ])
 
         ups = []
         for ind in reversed(range(num_mults)):
             is_last = (ind < 1)
-            # use_attn = (now_res in attn_res)
+            use_attn = ((now_res_h, now_res_w) in attn_res)
+            print(use_attn)
             channel_mult = inner_channel * channel_mults[ind]
             for _ in range(0, res_blocks+1):
-                ups.append(ResnetBlock(
-                    pre_channel+feat_channels.pop(), channel_mult, time_emb_dim=time_dim, dropout=dropout, norm_groups=norm_groups))
+                ups.append(ResnetBlocWithAttn(
+                    pre_channel+feat_channels.pop(), channel_mult, time_emb_dim=time_dim, dropout=dropout, with_attn=use_attn, norm_groups=norm_groups, batch_norm=batch_norm))
                 pre_channel = channel_mult
             if not is_last:
                 ups.append(Upsample(pre_channel))
@@ -226,23 +234,123 @@ class UNet(nn.Module):
 
         feats = []
         for layer in self.downs:
-            if isinstance(layer, ResnetBlock):
+            if isinstance(layer, ResnetBlocWithAttn):
                 x = layer(x, t)
             else:
                 x = layer(x)
             feats.append(x)
 
         for layer in self.mid:
-            if isinstance(layer, ResnetBlock):
+            if isinstance(layer, ResnetBlocWithAttn):
                 x = layer(x, t)
             else:
                 x = layer(x)
 
         for layer in self.ups:
-            if isinstance(layer, ResnetBlock):
+            if isinstance(layer, ResnetBlocWithAttn):
                 x = layer(torch.cat((x, feats.pop()), dim=1), t)
             else:
                 x = layer(x)
 
         return self.final_conv(x)
+
+# class UNet(nn.Module):
+#     def __init__(
+#         self,
+#         in_channel=6,
+#         out_channel=3,
+#         inner_channel=32,
+#         norm_groups=32,
+#         channel_mults=(1, 2, 4, 8),
+#         res_blocks=3,
+#         dropout=0,
+#         with_time_emb=True,
+#         img_h = 224,
+#         img_w = 272,
+#         batch_norm=False
+#     ):
+#         super().__init__()
+
+#         if with_time_emb:
+#             time_dim = inner_channel
+#             self.time_mlp = nn.Sequential(
+#                 TimeEmbedding(inner_channel),
+#                 nn.Linear(inner_channel, inner_channel * 4),
+#                 Swish(),
+#                 nn.Linear(inner_channel * 4, inner_channel)
+#             )
+#         else:
+#             time_dim = None
+#             self.time_mlp = None
+
+#         num_mults = len(channel_mults)
+#         pre_channel = inner_channel
+#         feat_channels = [pre_channel]
+#         now_res_h = img_h
+#         now_res_w = img_w
+#         downs = [nn.Conv2d(in_channel, inner_channel,
+#                            kernel_size=3, padding=1)]
+#         for ind in range(num_mults):
+#             is_last = (ind == num_mults - 1)
+#             channel_mult = inner_channel * channel_mults[ind]
+#             for _ in range(0, res_blocks):
+#                 downs.append(ResnetBlock(
+#                     pre_channel, channel_mult, time_emb_dim=time_dim, norm_groups=norm_groups, dropout=dropout, batch_norm=batch_norm))
+#                 feat_channels.append(channel_mult)
+#                 pre_channel = channel_mult
+#             if not is_last:
+#                 downs.append(Downsample(pre_channel))
+#                 feat_channels.append(pre_channel)
+#                 now_res_h = now_res_h // 2
+#                 now_res_w = now_res_w // 2
+#         self.downs = nn.ModuleList(downs)
+
+#         self.mid = nn.ModuleList([
+#             ResnetBlock(pre_channel, pre_channel, time_emb_dim=time_dim, norm_groups=norm_groups,
+#                                dropout=dropout, batch_norm=batch_norm),
+#             ResnetBlock(pre_channel, pre_channel, time_emb_dim=time_dim, norm_groups=norm_groups, 
+#                                 dropout=dropout, batch_norm=batch_norm)
+#         ])
+
+#         ups = []
+#         for ind in reversed(range(num_mults)):
+#             is_last = (ind < 1)
+#             channel_mult = inner_channel * channel_mults[ind]
+#             for _ in range(0, res_blocks+1):
+#                 ups.append(ResnetBlock(
+#                     pre_channel+feat_channels.pop(), channel_mult, time_emb_dim=time_dim, dropout=dropout, norm_groups=norm_groups, batch_norm=batch_norm))
+#                 pre_channel = channel_mult
+#             if not is_last:
+#                 ups.append(Upsample(pre_channel))
+#                 now_res_h = now_res_h * 2
+#                 now_res_w = now_res_w * 2
+
+#         self.ups = nn.ModuleList(ups)
+
+#         self.final_conv = Block(pre_channel, default(out_channel, in_channel), groups=norm_groups)
+
+#     def forward(self, x, time):
+#         t = self.time_mlp(time) if exists(self.time_mlp) else None
+
+#         feats = []
+#         for layer in self.downs:
+#             if isinstance(layer, ResnetBlock):
+#                 x = layer(x, t)
+#             else:
+#                 x = layer(x)
+#             feats.append(x)
+
+#         for layer in self.mid:
+#             if isinstance(layer, ResnetBlock):
+#                 x = layer(x, t)
+#             else:
+#                 x = layer(x)
+
+#         for layer in self.ups:
+#             if isinstance(layer, ResnetBlock):
+#                 x = layer(torch.cat((x, feats.pop()), dim=1), t)
+#             else:
+#                 x = layer(x)
+
+#         return self.final_conv(x)
         

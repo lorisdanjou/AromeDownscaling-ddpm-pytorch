@@ -64,7 +64,8 @@
                 8
             ],
             "res_blocks": 2,
-            "dropout": 0.2
+            "dropout": 0.2,
+            "batch_norm": true
         },
         "diffusion": {
             "img_h": 224,
