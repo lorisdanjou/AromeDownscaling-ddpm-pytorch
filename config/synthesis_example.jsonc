@@ -1,0 +1,38 @@
+{
+    "path": {
+        "output_dir": "/cnrm/recyf/Data/users/danjoul/ddpm_experiments/synthesis/"
+    },
+    "data": {
+        "data_train_location": "/cnrm/recyf/Data/users/danjoul/dataset/data_train/",
+        "data_valid_location": "/cnrm/recyf/Data/users/danjoul/dataset/data_test/",
+        "data_test_location": "/cnrm/recyf/Data/users/danjoul/dataset/data_test/",
+        "data_static_location": "/cnrm/recyf/Data/users/danjoul/dataset/",
+        "baseline_location": "/cnrm/recyf/Data/users/danjoul/dataset/baseline/test/",
+        "param": "u10",
+        "unit": "m/s",
+        "echeances": [6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36]
+    },
+    "expes": {
+        "results": [
+            "/cnrm/recyf/Data/users/danjoul/ddpm_experiments/expe3_infer2/y_pred.csv",
+            "/cnrm/recyf/Data/users/danjoul/ddpm_experiments/with_attention/y_pred.csv",
+            "/cnrm/recyf/Data/users/danjoul/ddpm_experiments/T4000/y_pred.csv",
+            "/cnrm/recyf/Data/users/danjoul/ddpm_experiments/postproc_std/y_pred.csv"
+        ],
+        "name": ["base", "with_attention", "T4000", "postprocessed"],
+        "interp": ["bl", "bl", "bl", "bl"],
+        "several_inputs": false
+    },
+    "maps": {
+        "cmap": "viridis",
+        "n": 10
+    },
+    "mae":      true,
+    "mse":      true,
+    "bias":     true,
+    "ssim":     true,
+    "WD":       false,
+    "PSD":      true,
+    "corr_len": true,
+    "corr":     false
+}
