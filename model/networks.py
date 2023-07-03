@@ -94,7 +94,7 @@ def define_G(opt):
         norm_groups=model_opt['unet']['norm_groups'],
         inner_channel=model_opt['unet']['inner_channel'],
         channel_mults=model_opt['unet']['channel_multiplier'],
-        # attn_res=model_opt['unet']['attn_res'],
+        attn_res=model_opt['unet']['attn_res'],
         res_blocks=model_opt['unet']['res_blocks'],
         dropout=model_opt['unet']['dropout'],
         img_h=model_opt['diffusion']['img_h'],

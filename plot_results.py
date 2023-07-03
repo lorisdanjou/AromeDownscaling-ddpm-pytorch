@@ -41,7 +41,7 @@ dates_test = rangex([
 ])
 resample = 'bl'
 echeances = range(6, 37, 3)
-working_dir = '/cnrm/recyf/Data/users/danjoul/ddpm_experiments/with_batch_norm_2/'
+working_dir = '/cnrm/recyf/Data/users/danjoul/ddpm_experiments/T4000/'
 
 
 # ========== Load Data

@@ -6,7 +6,7 @@ import logging
 from tensorboardX import SummaryWriter
 import data as Data
 from data.load_data import get_arrays_cols, crop
-from data.normalisations import destandardisation
+from data.normalisations import destandardisation, denormalisation, min_max_denorm, mean_denorm
 import model as Model
 import core.metrics as Metrics
 import numpy as np
@@ -111,7 +111,15 @@ if __name__ == "__main__":
 
         
 
-    y_pred_df = destandardisation(y_pred_df, opt["path"]["working_dir"])
+    if opt["preprocessing"]["normalisation"] is not None:
+        if opt["preprocessing"]["normalisation"] == "standardisation":
+            y_pred_df = destandardisation(y_pred_df, opt["path"]["working_dir"])
+        elif opt["preprocessing"]["normalisation"] == "normalisation":
+            y_pred_df = denormalisation(y_pred_df, opt["path"]["working_dir"])
+        elif opt["preprocessing"]["normalisation"] == "minmax":
+            y_pred_df = min_max_denorm(y_pred_df, opt["path"]["working_dir"])
+        elif opt["preprocessing"]["normalisation"] == "mean":
+            y_pred_df = mean_denorm(y_pred_df, opt["path"]["working_dir"])
     y_pred_df = crop(y_pred_df)
 
     y_pred_df.to_pickle(opt["path"]["working_dir"] + 'y_pred.csv')
