@@ -62,8 +62,8 @@ if __name__ == "__main__":
     )
 
     # pointwise scores
-    if opt["mae"]:
-        print("Computing & Plotting MAE ...")
+    if opt["mae"]["maps"]:
+        print("Computing & Plotting MAE maps ...")
         maes_df = []
         for expe_df in expes_results:
             maes_df.append(ps.compute_score(expe_df, ps.mae, "MAE"))
@@ -75,9 +75,27 @@ if __name__ == "__main__":
             opt["data"]["unit"], 
             cmap="pink"
         )
+    if opt["mae"]["distribs"]:
+        print("Computing & Plotting MAE distributions ...")
+        maes_df = []
+        maes_df_terre = []
+        maes_df_mer = []
+        for expe_df in expes_results:
+            maes_df.append(ps.compute_score(expe_df, ps.mae, "MAE"))
+            maes_df_terre.append(ps.compute_score_terre(maes_df[-1], "MAE"))
+            maes_df_mer.append(ps.compute_score_mer(maes_df[-1], "MAE"))
+        ps.synthesis_score_distribs(
+            expes_names,
+            maes_df,
+            maes_df_terre,
+            maes_df_mer,
+            opt["path"]["output_dir"],
+            "MAE"
+        )
 
-    if opt["mse"]:
-        print("Computing & Plotting MSE ...")
+
+    if opt["mse"]["maps"]:
+        print("Computing & Plotting MSE maps ...")
         mses_df = []
         for expe_df in expes_results:
             mses_df.append(ps.compute_score(expe_df, ps.mse, "MSE"))
@@ -89,9 +107,27 @@ if __name__ == "__main__":
             "$" + opt["data"]["unit"] + "^2$", 
             cmap="pink"
         )
+    if opt["mse"]["distribs"]:
+        print("Computing & Plotting MSE distributions ...")
+        mses_df = []
+        mses_df_terre = []
+        mses_df_mer = []
+        for expe_df in expes_results:
+            mses_df.append(ps.compute_score(expe_df, ps.mse, "MSE"))
+            mses_df_terre.append(ps.compute_score_terre(mses_df[-1], "MSE"))
+            mses_df_mer.append(ps.compute_score_mer(mses_df[-1], "MSE"))
+        ps.synthesis_score_distribs(
+            expes_names,
+            mses_df,
+            mses_df_terre,
+            mses_df_mer,
+            opt["path"]["output_dir"],
+            "MSE"
+        )
 
-    if opt["bias"]:
-        print("Computing & Plotting bias ...")
+
+    if opt["bias"]["maps"]:
+        print("Computing & Plotting bias maps ...")
         bias_df = []
         for expe_df in expes_results:
             bias_df.append(ps.compute_score(expe_df, ps.bias, "bias"))
@@ -103,10 +139,27 @@ if __name__ == "__main__":
             opt["data"]["unit"], 
             cmap="coolwarm"
         )
+    if opt["bias"]["distribs"]:
+        print("Computing & Plotting bias distributions ...")
+        bias_df = []
+        bias_df_terre = []
+        bias_df_mer = []
+        for expe_df in expes_results:
+            bias_df.append(ps.compute_score(expe_df, ps.bias, "bias"))
+            bias_df_terre.append(ps.compute_score_terre(bias_df[-1], "bias"))
+            bias_df_mer.append(ps.compute_score_mer(bias_df[-1], "bias"))
+        ps.synthesis_score_distribs(
+            expes_names,
+            bias_df,
+            bias_df_terre,
+            bias_df_mer,
+            opt["path"]["output_dir"],
+            "bias"
+        )
         
 
-    if opt["ssim"]:
-        print("Computing & Plotting SSIM ...")
+    if opt["ssim"]["maps"]:
+        print("Computing & Plotting SSIM maps ...")
         ssim_df = []
         for expe_df in expes_results:
             ssim_df.append(ps.compute_score(expe_df, ps.ssim, "SSIM"))
@@ -118,6 +171,24 @@ if __name__ == "__main__":
             "", 
             cmap="plasma"
         )
+    if opt["ssim"]["distribs"]:
+        print("Computing & Plotting SSIM distributions ...")
+        ssim_df = []
+        ssim_df_terre = []
+        ssim_df_mer = []
+        for expe_df in expes_results:
+            ssim_df.append(ps.compute_score(expe_df, ps.ssim, "SSIM"))
+            ssim_df_terre.append(ps.compute_score_terre(ssim_df[-1], "SSIM"))
+            ssim_df_mer.append(ps.compute_score_mer(ssim_df[-1], "SSIM"))
+        ps.synthesis_score_distribs(
+            expes_names,
+            ssim_df,
+            ssim_df_terre,
+            ssim_df_mer,
+            opt["path"]["output_dir"],
+            "SSIM"
+        )
+        
 
     
     # WD

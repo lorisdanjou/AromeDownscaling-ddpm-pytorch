@@ -27,10 +27,22 @@
         "cmap": "viridis",
         "n": 10
     },
-    "mae":      true,
-    "mse":      true,
-    "bias":     true,
-    "ssim":     true,
+    "mae": {
+        "maps":     true,
+        "distribs": true
+    },
+    "mse": {
+        "maps":     true,
+        "distribs": false
+    },
+    "bias": {
+        "maps":     true,
+        "distribs": false
+    },
+    "ssim": {
+        "maps":     true,
+        "distribs": false
+    },
     "WD":       false,
     "PSD":      true,
     "corr_len": true,

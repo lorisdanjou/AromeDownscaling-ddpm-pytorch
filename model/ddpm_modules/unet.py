@@ -255,4 +255,69 @@ class UNet(nn.Module):
                 x = layer(x)
 
         return self.final_conv(x)
+    
+
+class MeanBypassNetwork(nn.Module):
+    def __init__(
+        self,
+        in_channel=6,
+        out_channel=3,
+        inner_channel=32,
+        norm_groups=32,
+        channel_mults=(1, 2, 4, 8),
+        attn_res=[],
+        res_blocks=3,
+        dropout=0,
+        with_time_emb=True,
+        img_h = 224,
+        img_w = 272,
+        batch_norm=False
+    ):
+        super().__init__()
+        self.unet = UNet(
+            in_channel=in_channel,
+            out_channel=out_channel,
+            inner_channel=inner_channel,
+            norm_groups=norm_groups,
+            channel_mults=channel_mults,
+            attn_res=attn_res,
+            res_blocks=res_blocks,
+            dropout=dropout,
+            with_time_emb=with_time_emb,
+            img_h = img_h,
+            img_w = img_w,
+            batch_norm=batch_norm
+        )
+
+        self.linear1 = nn.Linear(in_channel, inner_channel, bias=True)
+        self.linear2 = nn.Linear(inner_channel, inner_channel, bias=True)
+        self.linear3 = nn.Linear(inner_channel, out_channel, bias=True)
+        self.batch_norm = nn.BatchNorm1d(inner_channel)
+        self.relu = nn.ReLU()
+
+    def forward(self, x, time):
+        x_mean = x.mean([2, 3])
+        for i in range(x.shape[0]):
+            for j in range(x.shape[1]):
+                x[i, j, :, :] = x[i, j, :, :] - torch.ones(x.shape[2:4], device=x.device) * x_mean[i, j]
         
+        u = self.unet.forward(x, time)
+
+        u_mean = u.mean([2, 3])
+        for i in range(u.shape[0]):
+            for j in range(u.shape[1]):
+                u[i, j, :, :] = u[i, j, :, :] - torch.ones(u.shape[2:4], device=u.device) * u_mean[i, j]
+
+        m = self.linear1(x_mean)
+        m = self.batch_norm(m)
+        m = self.relu(m)
+        m = self.linear2(m)
+        m = self.batch_norm(m)
+        m = self.relu(m)
+        m = self.linear3(m)
+
+        for i in range(u.shape[0]):
+            for j in range(u.shape[1]):
+                u[i, j, :, :] = u[i, j, :, :] + torch.ones(u.shape[2:4], device=u.device) * m[i, j]
+
+        return u
