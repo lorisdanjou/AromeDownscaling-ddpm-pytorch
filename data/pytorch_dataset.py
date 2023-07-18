@@ -41,4 +41,31 @@ class PyTorchDataset(Dataset):
         y = torch.from_numpy(y_array)
 
         return {"SR": X, "HR": y}
+    
+
+class EnsembleDataset(Dataset):
+    def __init__(self, X_df, data_len=-1):
+        self.X_df = X_df
+        self.data_len = data_len
+
+    def __len__(self):
+        if self.data_len < 0:
+            return len(self.X_df)
+        else: 
+            return self.data_len
+
+    def __getitem__(self, index):
+        X_df_item = pd.DataFrame(
+            [],
+            columns=self.X_df.columns
+        )
+        X_df_item.loc[len(X_df_item)] = self.X_df.loc[index]
+
+        X_array = ld.df_to_array(X_df_item)
+
+        X_array = X_array[0, :, :, :].transpose((2,0,1))
+
+        X = torch.from_numpy(X_array)
+        return {"SR": X}
+    
         

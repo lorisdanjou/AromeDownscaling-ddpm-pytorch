@@ -66,3 +66,17 @@ def df_to_array(df):
 def get_ind_terre_mer_500m():
     filepath = '/cnrm/recyf/Data/users/danjoul/dataset/static_G9KP_SURFIND.TERREMER.npy'
     return np.load(filepath)
+
+
+def get_shape_500m():
+    field_500m = np.load('/cnrm/recyf/Data/users/danjoul/dataset/data_train/G9KP_2021-01-01T00:00:00Z_rr.npy')
+    return field_500m[:, :, 0].shape
+
+
+def get_shape_2km5(resample='c'):
+    if resample == 'c':
+        field_2km5 = np.load('/cnrm/recyf/Data/users/danjoul/dataset/data_train/oper_c_2021-01-01T00:00:00Z_rr.npy')
+        return field_2km5[:, :, 0].shape
+    else:
+        field_2km5 = np.load('/cnrm/recyf/Data/users/danjoul/dataset/data_train/oper_r_2021-01-01T00:00:00Z_rr.npy')
+        return field_2km5[:, :, 0].shape

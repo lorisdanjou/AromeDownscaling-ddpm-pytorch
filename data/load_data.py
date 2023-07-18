@@ -1,20 +1,7 @@
 import numpy as np
 from os.path import exists
 import pandas as pd
-
-
-def get_shape_500m():
-    field_500m = np.load('/cnrm/recyf/Data/users/danjoul/dataset/data_train/G9KP_2021-01-01T00:00:00Z_rr.npy')
-    return field_500m[:, :, 0].shape
-
-
-def get_shape_2km5(resample='c'):
-    if resample == 'c':
-        field_2km5 = np.load('/cnrm/recyf/Data/users/danjoul/dataset/data_train/oper_c_2021-01-01T00:00:00Z_rr.npy')
-        return field_2km5[:, :, 0].shape
-    else:
-        field_2km5 = np.load('/cnrm/recyf/Data/users/danjoul/dataset/data_train/oper_r_2021-01-01T00:00:00Z_rr.npy')
-        return field_2km5[:, :, 0].shape
+import utils
 
 
 def load_X(dates, echeances, params, data_location, data_static_location='', static_fields=[], resample='r'):
@@ -26,9 +13,9 @@ def load_X(dates, echeances, params, data_location, data_static_location='', sta
     if resample in ['bl', 'bc']:
         domain_shape = [205, 260]
     elif resample =='r':
-        domain_shape = get_shape_500m()
+        domain_shape = utils.get_shape_500m()
     else:
-        domain_shape = get_shape_2km5()
+        domain_shape = utils.get_shape_2km5()
     data = pd.DataFrame(
         [], 
         columns = ['dates', 'echeances'] + params
@@ -102,7 +89,7 @@ def load_y(dates, echeances, params, data_location):
         [], 
         columns = ['dates', 'echeances'] + params
     )
-    domain_shape_out = get_shape_500m()
+    domain_shape_out = utils.get_shape_500m()
     for i_d, d in enumerate(dates):
         # chargement des données
         y_d = np.zeros([len(echeances), domain_shape_out[0], domain_shape_out[1], len(params)], dtype=np.float32)
@@ -204,7 +191,7 @@ def param_to_array(arrays_serie):
     """
     array = np.zeros((len(arrays_serie), arrays_serie[0].shape[0], arrays_serie[0].shape[1]), dtype=np.float32)
     for i in range(len(arrays_serie)):
-        array[i, :, :] = arrays_serie[i]
+        array[i, :, :] = arrays_serie.iloc[i]
     return array
 
 
