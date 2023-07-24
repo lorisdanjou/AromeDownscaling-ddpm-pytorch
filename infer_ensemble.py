@@ -43,7 +43,7 @@ if __name__ == "__main__":
     tb_logger = SummaryWriter(log_dir=opt['path']['tb_logger'])
 
     # loading and preprocessing data
-    X_ens_df, X_train_df = Data.load_data_ensemble(opt["data_loading"], opt["ensemble"])
+    X_ens_df, X_train_df = Data.load_data_ensemble(opt["data_loading"], opt["ensemble"]["DDPM"])
     X_ens_df = Data.preprocess_data_ensemble(opt, X_ens_df, X_train_df)
 
     ens_ds  = Data.create_dataset_ensemble(X_ens_df)
@@ -62,7 +62,7 @@ if __name__ == "__main__":
         diffusion.load_best_model(load_path)
 
     # inference
-    for i in range(opt["ensemble"]["n_members"]):
+    for i in range(opt["ensemble"]["DDPM"]["n_members"]):
         output_dir = os.path.join(
             opt["path"]["working_dir"], str(i + 1) + "/"
         )
@@ -103,8 +103,6 @@ if __name__ == "__main__":
                 plt.savefig(output_dir + "images/" + "image_{}.png".format(j))
                 logger.info("Figure saved")
 
-            
-
         if opt["preprocessing"]["normalisation"] is not None:
             if opt["preprocessing"]["normalisation"] == "standardisation":
                 y_pred_df = destandardisation(y_pred_df, opt["path"]["working_dir"])
@@ -116,7 +114,7 @@ if __name__ == "__main__":
                 y_pred_df = mean_denorm(y_pred_df, opt["path"]["working_dir"])
         y_pred_df = crop(y_pred_df)
 
-
+        # postprocessing 
         postproc_opt = opt["postprocessing"]
         if postproc_opt is not None:
             y_pred_df = postprocess_df(y_pred_df, X_ens_df, postproc_opt)
