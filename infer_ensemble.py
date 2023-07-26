@@ -1,11 +1,10 @@
 import os
+import utils
 import torch
 import argparse
 import core.logger as Logger
 import logging
-from tensorboardX import SummaryWriter
 import data as Data
-from data.load_data import crop
 from data.normalisations import destandardisation, denormalisation, min_max_denorm, mean_denorm
 from data.postprocessing import postprocess_df
 import model as Model
@@ -40,7 +39,6 @@ if __name__ == "__main__":
     Logger.setup_logger('val', opt['path']['log'], 'val', level=logging.INFO)
     logger = logging.getLogger('base')
     logger.info(Logger.dict2str(opt))
-    tb_logger = SummaryWriter(log_dir=opt['path']['tb_logger'])
 
     # loading and preprocessing data
     X_ens_df, X_train_df = Data.load_data_ensemble(opt["data_loading"], opt["ensemble"]["DDPM"])
@@ -103,6 +101,7 @@ if __name__ == "__main__":
                 plt.savefig(output_dir + "images/" + "image_{}.png".format(j))
                 logger.info("Figure saved")
 
+        # denormalisation 
         if opt["preprocessing"]["normalisation"] is not None:
             if opt["preprocessing"]["normalisation"] == "standardisation":
                 y_pred_df = destandardisation(y_pred_df, opt["path"]["working_dir"])
@@ -116,7 +115,7 @@ if __name__ == "__main__":
             elif opt["preprocessing"]["normalisation"] == "mean":
                 y_pred_df = mean_denorm(y_pred_df, opt["path"]["working_dir"])
                 X_ens_df = mean_denorm(X_ens_df, opt["path"]["working_dir"])
-        y_pred_df = crop(y_pred_df)
+        y_pred_df = utils.crop(y_pred_df)
 
         # postprocessing 
         postproc_opt = opt["postprocessing"]

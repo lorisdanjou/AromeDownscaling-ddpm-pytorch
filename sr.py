@@ -1,12 +1,12 @@
 import os
+import utils
 import torch
 import argparse
 import core.logger as Logger
 import logging
-from tensorboardX import SummaryWriter
 import data as Data
-from data.load_data import get_arrays_cols, crop
 from data.normalisations import destandardisation, denormalisation, min_max_denorm, mean_denorm
+from data.postprocessing import postprocess_df
 import model as Model
 import core.metrics as Metrics
 import numpy as np
@@ -20,7 +20,7 @@ from time import perf_counter
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('-c', '--config', type=str, default='config/sr_ddpm.jsonc',
+    parser.add_argument('-c', '--config', type=str, default='config/sr_example.jsonc',
                         help='JSON file for configuration')
     parser.add_argument('-gpu', '--gpu_ids', type=str, default=None)
 
@@ -36,11 +36,9 @@ if __name__ == "__main__":
     torch.backends.cudnn.benchmark = True
 
     Logger.setup_logger(None, opt['path']['log'],
-                        'train', level=logging.INFO, screen=True)
-    Logger.setup_logger('val', opt['path']['log'], 'val', level=logging.INFO)
-    logger = logging.getLogger('base')
+                        'log', level=logging.INFO, screen=True)
+    logger = logging.getLogger("base")
     logger.info(Logger.dict2str(opt))
-    tb_logger = SummaryWriter(log_dir=opt['path']['tb_logger'])
 
     # create dirs
     for _, item in opt["path"].items():
@@ -96,12 +94,8 @@ if __name__ == "__main__":
             diffusion.optimize_parameters()
             # log
             if current_step % opt["training"]["print_freq"] == 0:
-                logs = diffusion.get_current_log()
                 message = '<epoch:{:3d}, iter:{:8,d}> '.format(
                     current_epoch, current_step)
-                for k, v in logs.items():
-                    message += '{:s}: {:.4e} '.format(k, v)
-                    tb_logger.add_scalar(k, v, current_step)
                 logger.info(message)
             t1 = perf_counter()
 
@@ -170,7 +164,6 @@ if __name__ == "__main__":
                 logger.info("Training time: {:.2f}s".format(t1 - t0))
                 logger.info("Eval time: {:.2f}s".format(t2 - t1))
 
-
     # save model
     logger.info('End of training.')
 
@@ -185,7 +178,7 @@ if __name__ == "__main__":
             [],
             columns=y_test_df.columns
         )
-        channels = get_arrays_cols(y_test_df)
+        channels = utils.get_arrays_cols(y_test_df)
 
         diffusion.set_new_noise_schedule(opt['model']['beta_schedule']['val'], schedule_phase='val')
 
@@ -220,18 +213,27 @@ if __name__ == "__main__":
                 fig.colorbar(im, ax=ax)
                 plt.savefig(opt["path"]["infer_results"] + "image_{}.png".format(i))
 
-            
+        # denormmalisation
         if opt["preprocessing"]["normalisation"] is not None:
             if opt["preprocessing"]["normalisation"] == "standardisation":
                 y_pred_df = destandardisation(y_pred_df, opt["path"]["working_dir"])
+                X_test_df = destandardisation(X_test_df, opt["path"]["working_dir"])
             elif opt["preprocessing"]["normalisation"] == "normalisation":
                 y_pred_df = denormalisation(y_pred_df, opt["path"]["working_dir"])
+                X_test_df = denormalisation(X_test_df, opt["path"]["working_dir"])
             elif opt["preprocessing"]["normalisation"] == "minmax":
                 y_pred_df = min_max_denorm(y_pred_df, opt["path"]["working_dir"])
+                X_test_df = min_max_denorm(X_test_df, opt["path"]["working_dir"])
             elif opt["preprocessing"]["normalisation"] == "mean":
                 y_pred_df = mean_denorm(y_pred_df, opt["path"]["working_dir"])
+                X_test_df = mean_denorm(X_test_df, opt["path"]["working_dir"])
+
+        # postprocessing 
+        postproc_opt = opt["postprocessing"]
+        if postproc_opt is not None:
+            y_pred_df = postprocess_df(y_pred_df, X_test_df, postproc_opt)
         
-        y_pred_df = crop(y_pred_df)
+        y_pred_df = utils.crop(y_pred_df)
         y_pred_df.to_pickle(opt["path"]["working_dir"] + 'y_pred.csv')
 
         logger.info("End of inference.")

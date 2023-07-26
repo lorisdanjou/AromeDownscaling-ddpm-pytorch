@@ -69,12 +69,12 @@ def dict_to_nonedict(opt):
         return opt
 
 
-def setup_logger(logger_name, root, phase, level=logging.INFO, screen=False):
+def setup_logger(logger_name, root, name, level=logging.INFO, screen=False):
     '''set up logger'''
     l = logging.getLogger(logger_name)
     formatter = logging.Formatter(
         '%(asctime)s.%(msecs)03d - %(levelname)s: %(message)s', datefmt='%y-%m-%d %H:%M:%S')
-    log_file = os.path.join(root, '{}.log'.format(phase))
+    log_file = os.path.join(root, '{}.log'.format(name))
     fh = logging.FileHandler(log_file, mode='w')
     fh.setFormatter(formatter)
     l.setLevel(level)
