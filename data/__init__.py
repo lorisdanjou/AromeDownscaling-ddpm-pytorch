@@ -1,10 +1,13 @@
 from bronx.stdtypes.date import daterangex as rangex
 import data.load_data as ld
 import data.normalisations as norm
-from .pytorch_dataset import PyTorchDataset, EnsembleDataset
+from .pytorch_dataset import DeterministicDataset, EnsembleDataset
 from torch.utils.data import DataLoader
 
 def load_data(data_loading_opt):
+    """
+    Loads data folowing data_loading_opt (dict)
+    """
     data_train_location  = data_loading_opt["data_train_location"]
     data_valid_location  = data_loading_opt["data_valid_location"]
     data_test_location   = data_loading_opt["data_test_location"]
@@ -115,6 +118,9 @@ def load_data(data_loading_opt):
     return X_train_df, y_train_df, X_valid_df, y_valid_df, X_test_df, y_test_df
 
 def preprocess_data(opt, X_train_df, y_train_df, X_valid_df, y_valid_df, X_test_df, y_test_df):
+    """
+    Preprocess data folowing opt (dict)
+    """
     preproc_opt = opt["preprocessing"]
     output_dir = opt["path"]["working_dir"]
 
@@ -161,7 +167,7 @@ def preprocess_data(opt, X_train_df, y_train_df, X_valid_df, y_valid_df, X_test_
 
 
 def create_dataset(X_df, y_df, data_len=-1):
-    return PyTorchDataset(X_df, y_df, data_len=data_len)
+    return DeterministicDataset(X_df, y_df, data_len=data_len)
 
 
 def create_dataloader(dataset, training_opt=None, phase=None):
@@ -185,6 +191,9 @@ def create_dataloader(dataset, training_opt=None, phase=None):
 
 # for ensemble
 def load_data_ensemble(data_loading_opt, ensemble_opt):
+    """
+    Loads data following data_loading_opt (dict), but specifically for ensemble inference
+    """
     data_train_location  = data_loading_opt["data_train_location"]
     data_valid_location  = data_loading_opt["data_valid_location"]
     data_test_location   = data_loading_opt["data_test_location"]
@@ -245,6 +254,9 @@ def load_data_ensemble(data_loading_opt, ensemble_opt):
 
 
 def preprocess_data_ensemble(opt, X_ens_df, X_train_df):
+    """
+    Preprocess data following opt (dict), but specifically for ensemble inference
+    """
     preproc_opt = opt["preprocessing"]
     output_dir = opt["path"]["working_dir"]
 

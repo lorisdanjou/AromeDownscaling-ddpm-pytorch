@@ -1,18 +1,16 @@
 import os
+import utils
 import torch
 import argparse
 import core.logger as Logger
 import logging
 import data as Data
-from data.load_data import get_arrays_cols, crop
 from data.normalisations import destandardisation, denormalisation, min_max_denorm, mean_denorm
 from data.postprocessing import postprocess_df
 import model as Model
 import core.metrics as Metrics
-import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
-import math
 from time import perf_counter
 
 
@@ -72,7 +70,7 @@ if __name__ == "__main__":
         [],
         columns=y_test_df.columns
     )
-    channels = get_arrays_cols(y_test_df)
+    channels = utils.get_arrays_cols(y_test_df)
 
     diffusion.set_new_noise_schedule(opt['model']['beta_schedule']['val'], schedule_phase='val')
 

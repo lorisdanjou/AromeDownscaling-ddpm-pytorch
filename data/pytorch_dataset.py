@@ -7,7 +7,7 @@ import numpy.random
 import matplotlib.pyplot as plt
 
 
-class PyTorchDataset(Dataset):
+class DeterministicDataset(Dataset):
     def __init__(self, X_df, y_df, data_len=-1):
         self.X_df = X_df
         self.y_df = y_df

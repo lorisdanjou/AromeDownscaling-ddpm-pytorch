@@ -1,7 +1,8 @@
 import numpy as np
 import pandas as pd
+import utils
 from bronx.stdtypes.date import daterangex as rangex
-from data.load_data import load_X, load_y, get_arrays_cols
+from data.load_data import load_X, load_y
 
 def min_max_scale(x, x_ref):
     normalized_x = (x - x.min()) / (x.max() - x.min())
@@ -16,7 +17,7 @@ def postprocess_df(df, df_ref, postproc_opt):
         [],
         columns=df.columns
     )
-    channels = get_arrays_cols(df)
+    channels = utils.get_arrays_cols(df)
     for i in range(len(df)):
         row = [df.dates.iloc[i], df.echeances.iloc[i]]
         for i_c, c in enumerate(channels):

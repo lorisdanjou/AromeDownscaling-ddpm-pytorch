@@ -11,10 +11,6 @@ def mkdirs(paths):
         for path in paths:
             os.makedirs(path, exist_ok=True)
 
-
-def get_timestamp():
-    return datetime.now().strftime('%y%m%d_%H%M%S')
-
 def parse(args):
     opt_path = args.config
     gpu_ids = args.gpu_ids
@@ -25,15 +21,6 @@ def parse(args):
             line = line.split('//')[0] + '\n'
             json_str += line
     opt = json.loads(json_str, object_pairs_hook=OrderedDict)
-
-    # set log directory
-    experiments_root = os.path.join(
-        'experiments', '{}_{}'.format(opt['name'], get_timestamp()))
-    opt['path']['experiments_root'] = experiments_root
-    for key, path in opt['path'].items():
-        if 'resume' not in key and 'experiments' not in key:
-            opt['path'][key] = os.path.join(experiments_root, path)
-            mkdirs(opt['path'][key])
 
     # export CUDA_VISIBLE_DEVICES
     if gpu_ids is not None:

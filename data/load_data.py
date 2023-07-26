@@ -148,15 +148,6 @@ def delete_missing_days(X_df, y_df):
 
     return X_df_out.reset_index(drop=True), y_df_out.reset_index(drop=True)
 
-
-def get_arrays_cols(df):
-    arrays_cols = []
-    for c in df.columns:
-        if type(df[c].iloc[0]) == np.ndarray:
-            arrays_cols.append(c)
-    return arrays_cols
-
-
 def pad(df):
     """
     Pad the data in order to make its size compatible with the unet
@@ -164,7 +155,7 @@ def pad(df):
     Output : dataframe with padding
     """
     df_out = df.copy()
-    arrays_cols = get_arrays_cols(df_out)
+    arrays_cols = utils.get_arrays_cols(df_out)
     for c in arrays_cols:
         for i in range(len(df_out)):
             df_out[c][i] = np.pad(df_out[c][i], ((5,5), (2,3)), mode='reflect')
@@ -199,7 +190,7 @@ def df_to_array(df):
     """
     transforms a pandas dataframe into a big numpy array of shape B x H x W x C
     """
-    arrays_cols = get_arrays_cols(df)
+    arrays_cols = utils.get_arrays_cols(df)
             
     array = np.zeros((len(df), df[arrays_cols[0]].iloc[0].shape[0], df[arrays_cols[0]].iloc[0].shape[1], len(arrays_cols)), dtype=np.float32)
 
