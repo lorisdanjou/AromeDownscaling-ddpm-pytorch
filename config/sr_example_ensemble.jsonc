@@ -3,17 +3,16 @@
     "gpu_ids": [
         0
     ],
-    "benchmark": false,
     "path": {
         // "experiments": "/cnrm/recyf/Data/users/danjoul/ddpm_experiments/expe3/",
         // "resume_state": "/cnrm/recyf/Data/users/danjoul/ddpm_experiments/expe3/checkpoint/I68000_E80",
-        "results":       "/cnrm/recyf/Data/users/danjoul/ddpm_experiments/base/",
-        "log":           "/cnrm/recyf/Data/users/danjoul/ddpm_experiments/base/logs/",
-        "checkpoint":    "/cnrm/recyf/Data/users/danjoul/ddpm_experiments/base/checkpoint/",
-        "working_dir" :  "/cnrm/recyf/Data/users/danjoul/ddpm_experiments/base/",
-        "tb_logger":     "/cnrm/recyf/Data/users/danjoul/ddpm_experiments/base/tb_logger/",
-        "eval_results" : "/cnrm/recyf/Data/users/danjoul/ddpm_experiments/base/eval_results/",
-        "infer_results": "/cnrm/recyf/Data/users/danjoul/ddpm_experiments/base/infer_results/"
+        "log":           "/cnrm/recyf/Data/users/danjoul/ddpm_ensemble/50_members/logs/",
+        "checkpoint":    "/cnrm/recyf/Data/users/danjoul/ddpm_ensemble/50_members/checkpoint/",
+        "working_dir" :  "/cnrm/recyf/Data/users/danjoul/ddpm_ensemble/50_members/",
+        "tb_logger":     "/cnrm/recyf/Data/users/danjoul/ddpm_ensemble/50_members/tb_logger/",
+        "weights":       "/cnrm/recyf/Data/users/danjoul/ddpm_experiments/long_training/checkpoint/"
+        // "eval_results" : "/cnrm/recyf/Data/users/danjoul/ddpm_ensemble/eval_results/",
+        // "infer_results": "/cnrm/recyf/Data/users/danjoul/ddpm_ensemble/infer_results/"
     },
     "data_loading": {
         // these hyperparameters should not be changed : 
@@ -49,12 +48,12 @@
         "config": "test" // "optimisation" or "test" 
     },
     "preprocessing": {
-        "normalisation": "standardisation" //"standardisation", "normalisation", "minmax" or "mean" 
+        "normalisation": "standardisation" //"standardisation" //"standardisation", "normalisation", "minmax" or "mean" 
     },
     "model": {
         "which_model_G": "ddpm",
         "unet": {
-            "type": "normal", //"normal" or "bypass"
+            "type": "normal",
             "in_channel": 4,
             "out_channel": 2,
             "norm_groups": null,
@@ -65,9 +64,12 @@
                 4,
                 8
             ],
+            "attn_res": [
+                [28, 34]
+            ],
             "res_blocks": 2,
             "dropout": 0.2,
-            "batch_norm": true
+            "batch_norm": false
         },
         "diffusion": {
             "img_h": 224,
@@ -78,20 +80,66 @@
         "beta_schedule": { // use manual beta_schedule for acceleration
             "train": {
                 "schedule": "linear",
-                "n_timestep": 1000,
+                "n_timestep": 2000,
                 "linear_start": 1e-6,
                 "linear_end": 1e-2
             },
             "val": {
                 "schedule": "linear",
-                "n_timestep": 1000,
+                "n_timestep": 2000,
                 "linear_start": 1e-6,
                 "linear_end": 1e-2
             }
         }
     },
+    "ensemble": {
+        "modulus": true,
+        "DDPM": {
+            "dates": [ // nouvelles dates (DDPM):
+                "2022-03-03T00:00:00",
+                "2022-03-04T00:00:00",
+                "2022-03-09T00:00:00",
+                "2022-03-19T00:00:00",
+                "2022-03-11T00:00:00",
+                "2022-03-23T00:00:00",
+                "2022-03-26T00:00:00",
+                "2022-03-27T00:00:00",
+                "2022-05-01T00:00:00",
+                "2022-05-03T00:00:00",
+                "2022-05-05T00:00:00",
+                "2022-05-10T00:00:00",
+                "2022-05-11T00:00:00",
+                "2022-05-23T00:00:00",
+                "2022-05-25T00:00:00"
+            ],
+            "echeances": [6, 21, 36],
+            "n_members": 50
+        },
+        "Arome": {
+            "dates": [
+                "2022-03-02T18:00:00",
+                "2022-03-03T18:00:00",
+                "2022-03-08T18:00:00",
+                "2022-03-18T18:00:00",
+                "2022-03-10T18:00:00",
+                "2022-03-22T18:00:00",
+                "2022-03-25T18:00:00",
+                "2022-03-26T18:00:00",
+                "2022-04-30T18:00:00",
+                "2022-05-02T18:00:00",
+                "2022-05-04T18:00:00",
+                "2022-05-09T18:00:00",
+                "2022-05-10T18:00:00",
+                "2022-05-22T18:00:00",
+                "2022-05-24T18:00:00"
+            ],
+            "echeances": [12, 27, 42],
+            "n_members": 17,
+            "data_location": "/cnrm/recyf/Data/users/danjoul/dataset/ensemble/"
+        }
+        
+    },
     "training": {
-        "enable": true,
         "batch_size": 4,
         "num_workers": 8,
         "use_shuffle": true,
@@ -99,24 +147,16 @@
             "type": "adam",
             "lr": 1e-4
         },
-        "n_iter": 100000,
-        "val_freq": 2000,//1e4
-        "save_checkpoint_freq": 2000,
-        "print_freq": 500,
-        "data_len": 50
-        // "n_epochs": 100
-
+        "n_iter": 300000, // 60000
+        "val_freq": 10000, // 10000
+        "save_checkpoint_freq": 10000, // 2000
+        "print_freq": 1000, // 500
+        "data_len": 130 // 50
     },
     "inference": {
         "enable": true,
-        "print_freq": 5,
-        "save_freq": 10,
-        "i_min": 0, // included
-        "i_max": 200, // not included
-        "step": 1
-    },
-    "postprocessing": { // not already included in the main programme
-        "method": "minmax" //"minmax" or "std"
+        "print_freq": 5, // 5
+        "save_freq": 10 // 10
     },
     "results": {
         "images": {
@@ -149,7 +189,7 @@
             "ssim": {
                 "enable": true,
                 "mode": "unique",
-                "cmap": "magma",
+                "cmap": "plasma",
                 "units": ["", ""],
                 "n": null
             }
@@ -166,5 +206,8 @@
         "correlation": {
             "enable": true
         }
+    },
+    "postprocessing": {
+        "method": "std" //"minmax" or "std" // not included in sr.py / infer.py
     }
 }

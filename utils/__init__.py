@@ -1,6 +1,7 @@
 import numpy as np
 
 IMG_EXTENT = [54.866, 56.193872, -20.5849, -21.6499]
+FULL_ECHEANCES = range(6, 37, 3)
 
 
 def get_arrays_cols(df):

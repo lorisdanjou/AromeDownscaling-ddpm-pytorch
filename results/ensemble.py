@@ -41,6 +41,89 @@ def load_ensemble(working_dir, n_members, params):
     return ens_df
 
 
+def select_indices(full_ech, real_ech):
+    """
+    Selects the good indices corresponding to the good echeances
+    """
+    indices = []
+    for ech in real_ech:
+        for i_fech, fech in enumerate(full_ech):
+            if ech == fech:
+                indices.append(i_fech)
+                break
+    return indices
+
+
+def add_input_output(ens_df, resample, data_test_location, params):
+    """
+    Adds inputs and outputs used to generate the ensemble to the results
+
+    Args:
+        ens_df (DataFrame): contains the results
+        resample (str): interpolation
+        data_test_location (st): filepath to the dataset
+        params (list): list of params (str)
+
+    Raises:
+        NotImplementedError: 
+
+    Returns:
+        DataFrame: contains the results and the inputs/outputs
+    """
+    dates = ens_df.dates.drop_duplicates().values
+
+    input_output_df = pd.DataFrame(
+        [],
+        columns = ["dates", "echeances"] + [p + "_X" for p in params] + [p + "_y" for p in params]
+    )
+
+    for i_d, d in enumerate(dates):
+        echeances = ens_df[ens_df.dates == d].echeances.drop_duplicates().values
+        values_X = []
+        values_y = []
+        for param in params:
+            # Load X
+            try:
+                if resample == 'c':
+                    filepath_X_test = data_test_location + 'oper_c_' + d + 'Z_' + param + '.npy'
+                elif resample == 'r':
+                    filepath_X_test = data_test_location + 'oper_r_' + d + 'Z_' + param + '.npy'
+                elif resample == 'bl':
+                    filepath_X_test = data_test_location + 'oper_bl_' + d + 'Z_' + param + '.npy'
+                elif resample == 'bc':
+                    filepath_X_test = data_test_location + 'oper_bc_' + d + 'Z_' + param + '.npy'
+                else:
+                    raise NotImplementedError
+
+                X = np.load(filepath_X_test)
+                if resample in ['bl', 'bc']:
+                    X = np.pad(X, ((5,4), (2,5), (0,0)), mode='edge')
+                values_X.append(X)
+            except FileNotFoundError:
+                print('missing day (X): ' + d)
+
+            # Load y
+            try:
+                filepath_y_test = data_test_location + 'G9L1_' + d + 'Z_' + param + '.npy'
+                y = np.load(filepath_y_test)
+                values_y.append(y)
+            except FileNotFoundError:
+                print('missing day (y): ' + d)
+        
+        values_X = np.array(values_X)
+        values_y = np.array(values_y)
+        indices = select_indices(utils.FULL_ECHEANCES, echeances)
+
+        for i_ech, ech in enumerate(echeances):
+            if (len(values_X) == len(params)) and (len(values_y) == len(params)):
+                values_X_ech = [values_X[i][:, :, indices[i_ech]] for i in range(len(values_X))]
+                values_y_ech = [values_y[i][:, :, indices[i_ech]] for i in range(len(values_y))]
+                input_output_df.loc[len(input_output_df)] = [dates[i_d], echeances[i_ech]] + \
+                    values_X_ech + values_y_ech
+
+    return pd.merge(ens_df, input_output_df, how="inner", on=["dates", "echeances"])#.dropna()#.reset_index(drop=True)
+
+
 def load_ensemble_arome(dates, echeances, params, n_members, data_location):
     """
     Loads a dataframe containing results of a PE-Arome ensemble (2,5km)
@@ -134,14 +217,22 @@ def plot_maps_ensemble(ens_df, output_dir, param, unit, n_members, n=42, cmap="v
         n (int, optional): number of images to plot. Defaults to 10.
         cmap (str, optional): colormap. Defaults to "viridis".
     """
-    k = math.floor(math.sqrt(n_members)) + 1 # size of the figure (number of plots / side)
+    k = math.floor(math.sqrt(n_members)) # size of the figure (number of plots / side)
     for i in range(n):
-        fig = plt.figure(figsize=[5*k, 4*k])
+        fig = plt.figure(figsize=[5*(k+1), 4*(k+1)])
         axs = []
         for j in range(n_members):
-            axs.append(fig.add_subplot(k, k, j+1, projection=ccrs.PlateCarree()))
+            axs.append(fig.add_subplot(k+1, k+1, j+1, projection=ccrs.PlateCarree()))
             axs[j].set_extent(utils.IMG_EXTENT)
             axs[j].coastlines(resolution='10m', color='black', linewidth=1)
+
+        axs.append(fig.add_subplot(k+1, k+1, k**2 + k + 1, projection=ccrs.PlateCarree()))
+        axs[n_members].set_extent(utils.IMG_EXTENT)
+        axs[n_members].coastlines(resolution='10m', color='black', linewidth=1)
+
+        axs.append(fig.add_subplot(k+1, k+1, k**2 + k + 2, projection=ccrs.PlateCarree()))
+        axs[n_members + 1].set_extent(utils.IMG_EXTENT)
+        axs[n_members + 1].coastlines(resolution='10m', color='black', linewidth=1)
 
         data = [ens_df[param + "_" + str(j + 1)].iloc[i] for j in range(n_members)]
         images = []
@@ -149,6 +240,15 @@ def plot_maps_ensemble(ens_df, output_dir, param, unit, n_members, n=42, cmap="v
             images.append(axs[j].imshow(data[j], cmap=cmap, origin='upper', extent=utils.IMG_EXTENT, transform=ccrs.PlateCarree()))
             axs[j].label_outer()
             axs[j].set_title(str(j + 1), fontdict={"fontsize": 20})
+
+        images.append(axs[n_members].imshow(ens_df[param + "_X"].iloc[i], cmap=cmap, origin='upper', extent=utils.IMG_EXTENT, transform=ccrs.PlateCarree()))
+        axs[n_members].label_outer()
+        axs[n_members].set_title("Arome 2km5", fontdict={"fontsize": 20})
+        
+        images.append(axs[n_members+1].imshow(ens_df[param + "_y"].iloc[i], cmap=cmap, origin='upper', extent=utils.IMG_EXTENT, transform=ccrs.PlateCarree()))
+        axs[n_members + 1].label_outer()
+        axs[n_members + 1].set_title("Arome 500m", fontdict={"fontsize": 20})
+        
         vmin = min(image.get_array().min() for image in images)
         vmax = max(image.get_array().max() for image in images)
         norm = colors.Normalize(vmin=vmin, vmax=vmax)
@@ -458,6 +558,112 @@ def plot_stat_distrib(mean_df, std_df, Q5_df, Q95_df, output_dir, param):
     plt.savefig(output_dir + 'distribution.png')
 
 
+def synthesis_all_stats_ensemble(
+    mean_df,
+    std_df,
+    Q5_df,
+    Q95_df,
+    output_dir,
+    param,
+    n=42
+
+):
+    all_stats_df = pd.DataFrame(
+        [],
+        columns = []
+    )
+    all_stats_df = pd.concat([all_stats_df, mean_df[["dates", "echeances"]]], axis=1)
+    all_stats_df = pd.concat([all_stats_df, mean_df[[param + m for m in ["_arome", "_ddpm"]]].rename(columns={param+ m:param + m + "_mean" for m in ["_arome", "_ddpm"]})], axis=1)
+    all_stats_df = pd.concat([all_stats_df,  std_df[[param + m for m in ["_arome", "_ddpm"]]].rename(columns={param+ m:param + m + "_std" for m in ["_arome", "_ddpm"]})], axis=1)
+    all_stats_df = pd.concat([all_stats_df,   Q5_df[[param + m for m in ["_arome", "_ddpm"]]].rename(columns={param+ m:param + m + "_Q5" for m in ["_arome", "_ddpm"]})], axis=1)
+    all_stats_df = pd.concat([all_stats_df,  Q95_df[[param + m for m in ["_arome", "_ddpm"]]].rename(columns={param+ m:param + m + "_Q95" for m in ["_arome", "_ddpm"]})], axis=1)
+
+    dates = mean_df.dates.drop_duplicates().values
+    echeances = mean_df.echeances.drop_duplicates().values
+
+    for i_d, d in enumerate(dates):
+        fig = plt.figure(figsize=[25, 11*len(echeances)])
+        axs = []
+        for j in range(8 * len(echeances)):
+            axs.append(fig.add_subplot(2*len(echeances), 4, j+1, projection=ccrs.PlateCarree()))
+            axs[j].set_extent(utils.IMG_EXTENT)
+            axs[j].coastlines(resolution='10m', color='black', linewidth=1)
+
+        images = []
+        stds = []
+        
+        for i_ech, ech in enumerate(echeances):
+            im = axs[0 + 8*i_ech].imshow(all_stats_df[(all_stats_df.dates == d)][(all_stats_df.echeances == ech)][param + "_ddpm_mean"].iloc[0], cmap="viridis", origin='upper', 
+                                extent=utils.IMG_EXTENT, transform=ccrs.PlateCarree())
+            images.append(im)
+            axs[0 + 8*i_ech].label_outer()
+            im = axs[1 + 8*i_ech].imshow(all_stats_df[(all_stats_df.dates == d)][(all_stats_df.echeances == ech)][param + "_ddpm_std"].iloc[0], cmap="plasma", origin='upper', 
+                                extent=utils.IMG_EXTENT, transform=ccrs.PlateCarree())
+            stds.append(im)
+            axs[1 + 8*i_ech].label_outer()
+            im = axs[2 + 8*i_ech].imshow(all_stats_df[(all_stats_df.dates == d)][(all_stats_df.echeances == ech)][param + "_ddpm_Q5"].iloc[0], cmap="viridis", origin='upper', 
+                                extent=utils.IMG_EXTENT, transform=ccrs.PlateCarree())
+            images.append(im)
+            axs[2 + 8*i_ech].label_outer()
+            im = axs[3 + 8*i_ech].imshow(all_stats_df[(all_stats_df.dates == d)][(all_stats_df.echeances == ech)][param + "_ddpm_Q95"].iloc[0], cmap="viridis", origin='upper', 
+                                extent=utils.IMG_EXTENT, transform=ccrs.PlateCarree())
+            images.append(im)
+            axs[3 + 8*i_ech].label_outer()    
+
+            im = axs[4 + 8*i_ech].imshow(all_stats_df[(all_stats_df.dates == d)][(all_stats_df.echeances == ech)][param + "_arome_mean"].iloc[0], cmap="viridis", origin='upper', 
+                                extent=utils.IMG_EXTENT, transform=ccrs.PlateCarree())
+            images.append(im)
+            axs[4 + 8*i_ech].label_outer()
+            im = axs[5 + 8*i_ech].imshow(all_stats_df[(all_stats_df.dates == d)][(all_stats_df.echeances == ech)][param + "_arome_std"].iloc[0], cmap="plasma", origin='upper', 
+                                extent=utils.IMG_EXTENT, transform=ccrs.PlateCarree())
+            stds.append(im)
+            axs[1 + 8*i_ech].label_outer()
+            im = axs[6 + 8*i_ech].imshow(all_stats_df[(all_stats_df.dates == d)][(all_stats_df.echeances == ech)][param + "_arome_Q5"].iloc[0], cmap="viridis", origin='upper', 
+                                extent=utils.IMG_EXTENT, transform=ccrs.PlateCarree())
+            images.append(im)
+            axs[6 + 8*i_ech].label_outer()
+            im = axs[7 + 8*i_ech].imshow(all_stats_df[(all_stats_df.dates == d)][(all_stats_df.echeances == ech)][param + "_arome_Q95"].iloc[0], cmap="viridis", origin='upper', 
+                                extent=utils.IMG_EXTENT, transform=ccrs.PlateCarree())
+            images.append(im)
+            axs[7 + 8*i_ech].label_outer()        
+        
+        # same scale for all mean, Q5, Q95 images
+        vmin = min(image.get_array().min() for image in images)
+        vmax = max(image.get_array().max() for image in images)
+        norm = colors.Normalize(vmin=vmin, vmax=vmax)
+        for im in images:
+            im.set_norm(norm)
+
+        # another scale for std images
+        vmin = min(std.get_array().min() for std in stds)
+        vmax = max(std.get_array().max() for std in stds)
+        norm = colors.Normalize(vmin=vmin, vmax=vmax)
+        for std in stds:
+            std.set_norm(norm)
+
+
+        for i_ech, ech in enumerate(echeances):
+            fig.colorbar(images[0], ax=axs[0 + 8*i_ech])
+            fig.colorbar(images[0], ax=axs[2 + 8*i_ech])
+            fig.colorbar(images[0], ax=axs[3 + 8*i_ech])
+            fig.colorbar(images[0], ax=axs[4 + 8*i_ech])
+            fig.colorbar(images[0], ax=axs[6 + 8*i_ech])
+            fig.colorbar(images[0], ax=axs[7 + 8*i_ech])
+            fig.colorbar(stds[0], ax=axs[1 + 8*i_ech])
+            fig.colorbar(stds[0], ax=axs[5 + 8*i_ech])
+
+            axs[0 + 8*i_ech].set_title("mean DDPM, +" + str(ech) + "h")
+            axs[1 + 8*i_ech].set_title("std DDPM, +" + str(ech) + "h")
+            axs[2 + 8*i_ech].set_title("Q5 DDPM, +" + str(ech) + "h")
+            axs[3 + 8*i_ech].set_title("Q95 DDPM, +" + str(ech) + "h")
+            axs[4 + 8*i_ech].set_title("mean Arome, +" + str(ech) + "h")
+            axs[5 + 8*i_ech].set_title("std Arome, +" + str(ech) + "h")
+            axs[6 + 8*i_ech].set_title("Q5 Arome, +" + str(ech) + "h")
+            axs[7 + 8*i_ech].set_title("Q95 Arome, +" + str(ech) + "h")
+
+        plt.savefig(output_dir + 'all_stats_synthesis_unique_' + param + "_" + d + '.png', bbox_inches='tight')
+
+
 def synthesis_unique_all_stats_ensemble(
     mean_df,
     std_df,
@@ -557,7 +763,6 @@ def synthesis_unique_all_stats_ensemble(
 
 
 def synthesis_stat_distrib(mean_df, std_df, Q5_df, Q95_df, output_dir, param):
-    
     D = np.zeros((len(mean_df), 6))
     for i in range(len(mean_df)):
         D[i, 0] = mean_df[param + "_ddpm"].iloc[i].mean()
@@ -601,83 +806,20 @@ def synthesis_stat_distrib(mean_df, std_df, Q5_df, Q95_df, output_dir, param):
     axs[1].tick_params(axis='x', rotation=45)
 
     plt.savefig(output_dir + 'synthesis_distributions.png')
-  
 
 
-if __name__ == "__main__":
-    from bronx.stdtypes.date import daterangex as rangex
-    from data.load_data import delete_missing_days
+def plot_std_echeance(std_df, output_dir, param):
+    dates = std_df.dates.drop_duplicates().values
+    echeances = std_df.echeances.drop_duplicates().values
 
-    working_dir = "/cnrm/recyf/Data/users/danjoul/ddpm_ensemble/50_members/"
-    params = ["u10", "v10"]
-    param = "u10"
-    dates_arome = rangex([
-        "2022030218-2022030218-PT24H",
-        "2022030318-2022030318-PT24H",
-        "2022030818-2022030818-PT24H",
-        "2022031818-2022031818-PT24H",
-        "2022031018-2022031018-PT24H",
-        "2022032218-2022032218-PT24H",
-        "2022032518-2022032518-PT24H",
-        "2022032618-2022032618-PT24H",
-        "2022043018-2022043018-PT24H",
-        "2022050218-2022050218-PT24H",
-        "2022050418-2022050418-PT24H",
-        "2022050918-2022050918-PT24H",
-        "2022051018-2022051018-PT24H",
-        "2022052218-2022052218-PT24H",
-        "2022052418-2022052418-PT24H"
-    ])
-    echeances_arome = [12, 27, 42]
+    for d in dates:
+        fig, ax = plt.subplots(figsize=[10, 10])
+        values_ddpm = [std_df[std_df.dates == d][std_df.echeances == ech][param + "_ddpm"].iloc[0].mean() for ech in echeances]
+        values_arome = [std_df[std_df.dates == d][std_df.echeances == ech][param + "_arome"].iloc[0].mean() for ech in echeances]
 
-    ddpm = load_ensemble(
-        working_dir,
-        n_members=50,
-        params=params
-    )
+        ax.plot(echeances, values_ddpm, color='k', label="DDPM")
+        ax.plot(echeances, values_arome, color='r', label="Arome")
+        ax.legend()
+        ax.grid()
 
-    print(len(ddpm.columns))
-
-    arome = load_ensemble_arome(
-        dates=dates_arome,
-        echeances=echeances_arome,
-        params=params,
-        n_members=17,
-        data_location="/cnrm/recyf/Data/users/danjoul/dataset/ensemble/"
-    )
-    arome = correct_dates_for_arome(arome)
-
-    mean_arome = compute_pointwise_mean(arome, 17, params)
-    std_arome  = compute_pointwise_std(arome, 17, params)
-    Q5_arome   = compute_pointwise_Q5(arome, 17, params)
-    Q95_arome  = compute_pointwise_Q95(arome, 17, params)
-    mean_ddpm  = compute_pointwise_mean(ddpm , 50 , params)
-    std_ddpm   = compute_pointwise_std(ddpm , 50 , params)
-    Q5_ddpm    = compute_pointwise_Q5(ddpm , 50 , params)
-    Q95_ddpm   = compute_pointwise_Q95(ddpm , 50 , params)
-
-    mean = group_ensembles(mean_arome, mean_ddpm) 
-    std  = group_ensembles(std_arome, std_ddpm) 
-    Q95  = group_ensembles(Q5_arome, Q5_ddpm)
-    Q5   = group_ensembles(Q95_arome, Q95_ddpm)
-
-    synthesis_unique_all_stats_ensemble(
-        mean,
-        std,
-        Q5,
-        Q95,
-        working_dir,
-        param
-    )
-
-    synthesis_stat_distrib(mean, std, Q5, Q95, working_dir, param)
-    synthesis_unique_all_stats_ensemble(
-        mean,
-        std,
-        Q5,
-        Q95,
-        working_dir,
-        param
-    )
-
-    
+        fig.savefig(output_dir + "std_echeance_" + d + ".png")

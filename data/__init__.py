@@ -1,6 +1,7 @@
 from bronx.stdtypes.date import daterangex as rangex
 import data.load_data as ld
 import data.normalisations as norm
+import data.modulus as mod
 from .pytorch_dataset import PyTorchDataset, EnsembleDataset
 from torch.utils.data import DataLoader
 import data.postprocessing as postproc
@@ -236,7 +237,7 @@ def load_data_ensemble(data_loading_opt, ensemble_opt):
     else:
         raise NotImplementedError
     
-    # keep only a fex days
+    # keep only a few days
     keep_dates = ensemble_opt["dates"]
     keep_ech   = ensemble_opt["echeances"]
 

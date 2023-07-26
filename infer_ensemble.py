@@ -106,12 +106,16 @@ if __name__ == "__main__":
         if opt["preprocessing"]["normalisation"] is not None:
             if opt["preprocessing"]["normalisation"] == "standardisation":
                 y_pred_df = destandardisation(y_pred_df, opt["path"]["working_dir"])
+                X_ens_df = destandardisation(X_ens_df, opt["path"]["working_dir"])
             elif opt["preprocessing"]["normalisation"] == "normalisation":
                 y_pred_df = denormalisation(y_pred_df, opt["path"]["working_dir"])
+                X_ens_df = denormalisation(X_ens_df, opt["path"]["working_dir"])
             elif opt["preprocessing"]["normalisation"] == "minmax":
                 y_pred_df = min_max_denorm(y_pred_df, opt["path"]["working_dir"])
+                X_ens_df = min_max_denorm(X_ens_df, opt["path"]["working_dir"])
             elif opt["preprocessing"]["normalisation"] == "mean":
                 y_pred_df = mean_denorm(y_pred_df, opt["path"]["working_dir"])
+                X_ens_df = mean_denorm(X_ens_df, opt["path"]["working_dir"])
         y_pred_df = crop(y_pred_df)
 
         # postprocessing 
@@ -121,7 +125,7 @@ if __name__ == "__main__":
 
         y_pred_df.to_pickle(output_dir + 'y_pred.csv')
 
-        logger.info("End of member ", i)
+        logger.info("End of member " + str(i))
 
     logger.info("End of inference")
 
