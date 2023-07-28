@@ -1,4 +1,5 @@
 from bronx.stdtypes.date import daterangex as rangex
+import utils
 import data.load_data as ld
 import data.normalisations as norm
 from .pytorch_dataset import DeterministicDataset, EnsembleDataset
@@ -130,9 +131,9 @@ def preprocess_data(opt, X_train_df, y_train_df, X_valid_df, y_valid_df, X_test_
     X_test_df , y_test_df  = ld.delete_missing_days(X_test_df, y_test_df)
 
     # pad data
-    X_train_df, y_train_df = ld.pad(X_train_df), ld.pad(y_train_df)
-    X_valid_df, y_valid_df = ld.pad(X_valid_df), ld.pad(y_valid_df)
-    X_test_df , y_test_df  = ld.pad(X_test_df),  ld.pad(y_test_df)
+    X_train_df, y_train_df = utils.pad(X_train_df), utils.pad(y_train_df)
+    X_valid_df, y_valid_df = utils.pad(X_valid_df), utils.pad(y_valid_df)
+    X_test_df , y_test_df  = utils.pad(X_test_df),  utils.pad(y_test_df)
 
     # Normalisation:
     if preproc_opt["normalisation"] is not None:
@@ -268,7 +269,7 @@ def preprocess_data_ensemble(opt, X_ens_df, X_train_df):
     X_train_df = X_train_df.drop(index=nan_indices_train, axis = 0)
 
     # pad data
-    X_ens_df = ld.pad(X_ens_df)
+    X_ens_df = utils.pad(X_ens_df)
 
     # Normalisation:
     if preproc_opt["normalisation"] is not None:

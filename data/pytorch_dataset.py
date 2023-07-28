@@ -1,4 +1,5 @@
 import torch
+import utils
 from torch.utils.data import Dataset
 import data.load_data as ld
 import pandas as pd
@@ -31,8 +32,8 @@ class DeterministicDataset(Dataset):
         )
         y_df_item.loc[len(y_df_item)] = self.y_df.loc[index]
 
-        X_array = ld.df_to_array(X_df_item)
-        y_array = ld.df_to_array(y_df_item)
+        X_array = utils.df_to_array(X_df_item)
+        y_array = utils.df_to_array(y_df_item)
 
         X_array = X_array[0, :, :, :].transpose((2,0,1))
         y_array = y_array[0, :, :, :].transpose((2,0,1))
@@ -61,7 +62,7 @@ class EnsembleDataset(Dataset):
         )
         X_df_item.loc[len(X_df_item)] = self.X_df.loc[index]
 
-        X_array = ld.df_to_array(X_df_item)
+        X_array = utils.df_to_array(X_df_item)
 
         X_array = X_array[0, :, :, :].transpose((2,0,1))
 

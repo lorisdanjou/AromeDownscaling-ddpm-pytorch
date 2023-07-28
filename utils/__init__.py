@@ -46,7 +46,7 @@ def param_to_array(arrays_serie):
     """
     array = np.zeros((len(arrays_serie), arrays_serie[0].shape[0], arrays_serie[0].shape[1]), dtype=np.float32)
     for i in range(len(arrays_serie)):
-        array[i, :, :] = arrays_serie[i]
+        array[i, :, :] = arrays_serie.iloc[i]
     return array
 
 
