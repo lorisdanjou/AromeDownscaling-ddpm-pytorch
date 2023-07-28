@@ -43,6 +43,8 @@ if __name__ == "__main__":
             param=param
         )
 
+        print("Number of samples : ", len(results_df))
+
         print("Plotting maps ...")
         out.plot_maps(
             results_df,

@@ -59,7 +59,6 @@ def load_results(y_pred_path, resample, data_test_location, baseline_location, p
 
         for i_ech, ech in enumerate(echeances):
             if (X_test is not None) and (y_test is not None) and (baseline is not None):
-                # print(d, ech)
                 results_df.loc[len(results_df)] = [
                     dates_test[i_d],
                     echeances[i_ech],
