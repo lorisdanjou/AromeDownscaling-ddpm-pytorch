@@ -34,8 +34,7 @@ if __name__ == "__main__":
     torch.backends.cudnn.benchmark = True
 
     Logger.setup_logger(None, opt['path']['log'],
-                        'train', level=logging.INFO, screen=True)
-    Logger.setup_logger('val', opt['path']['log'], 'val', level=logging.INFO)
+                        'log', level=logging.INFO, screen=True)
     logger = logging.getLogger('base')
     logger.info(Logger.dict2str(opt))
 
