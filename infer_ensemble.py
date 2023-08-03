@@ -18,7 +18,7 @@ import pandas as pd
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('-c', '--config', type=str, default='config/sr_ddpm.jsonc',
+    parser.add_argument('-c', '--config', type=str, default='config/sr_example_ensemble.jsonc',
                         help='JSON file for configuration')
     parser.add_argument('-gpu', '--gpu_ids', type=str, default=None)
 
@@ -28,6 +28,10 @@ if __name__ == "__main__":
     opt = Logger.parse(args)
     # Convert to NoneDict, which return None for missing key.
     opt = Logger.dict_to_nonedict(opt)
+
+    # create dirs
+    for _, item in opt["path"].items():
+        os.makedirs(item, exist_ok=True)
 
     # logging
     torch.backends.cudnn.enabled = True
@@ -103,22 +107,26 @@ if __name__ == "__main__":
         if opt["preprocessing"]["normalisation"] is not None:
             if opt["preprocessing"]["normalisation"] == "standardisation":
                 y_pred_df = destandardisation(y_pred_df, opt["path"]["working_dir"])
-                X_ens_df = destandardisation(X_ens_df, opt["path"]["working_dir"])
+                if i == 0:
+                    X_ens_denorm = destandardisation(X_ens_df, opt["path"]["working_dir"])
             elif opt["preprocessing"]["normalisation"] == "normalisation":
                 y_pred_df = denormalisation(y_pred_df, opt["path"]["working_dir"])
-                X_ens_df = denormalisation(X_ens_df, opt["path"]["working_dir"])
+                if i == 0:
+                    X_ens_denorm = denormalisation(X_ens_df, opt["path"]["working_dir"])
             elif opt["preprocessing"]["normalisation"] == "minmax":
                 y_pred_df = min_max_denorm(y_pred_df, opt["path"]["working_dir"])
-                X_ens_df = min_max_denorm(X_ens_df, opt["path"]["working_dir"])
+                if i == 0:
+                    X_ens_denorm = min_max_denorm(X_ens_df, opt["path"]["working_dir"])
             elif opt["preprocessing"]["normalisation"] == "mean":
                 y_pred_df = mean_denorm(y_pred_df, opt["path"]["working_dir"])
-                X_ens_df = mean_denorm(X_ens_df, opt["path"]["working_dir"])
+                if i == 0:
+                    X_ens_denorm = mean_denorm(X_ens_df, opt["path"]["working_dir"])
         y_pred_df = utils.crop(y_pred_df)
 
         # postprocessing 
         postproc_opt = opt["postprocessing"]
         if postproc_opt is not None:
-            y_pred_df = postprocess_df(y_pred_df, X_ens_df, postproc_opt)
+            y_pred_df = postprocess_df(y_pred_df, X_ens_denorm, postproc_opt)
 
         y_pred_df.to_pickle(output_dir + 'y_pred.csv')
 

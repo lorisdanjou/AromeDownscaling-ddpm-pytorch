@@ -1,27 +1,35 @@
 {
     "path": {
-        "output_dir": "/cnrm/recyf/Data/users/danjoul/ddpm_experiments/synthesis/"
+        "output_dir": "/cnrm/recyf/Data/users/danjoul/DDPM/experiments/synthesis_example/"
     },
     "data": {
+        // these parameters should not be changed:
         "data_train_location": "/cnrm/recyf/Data/users/danjoul/dataset/data_train/",
         "data_valid_location": "/cnrm/recyf/Data/users/danjoul/dataset/data_test/",
         "data_test_location": "/cnrm/recyf/Data/users/danjoul/dataset/data_test/",
         "data_static_location": "/cnrm/recyf/Data/users/danjoul/dataset/",
         "baseline_location": "/cnrm/recyf/Data/users/danjoul/dataset/baseline/test/",
+        "echeances": [6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36],
+        // these parameters can be changed
         "param": "u10",
-        "unit": "m/s",
-        "echeances": [6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36]
+        "unit": "m/s"
+        
     },
     "expes": {
-        "results": [
-            "/cnrm/recyf/Data/users/danjoul/ddpm_experiments/expe3_infer2/y_pred.csv",
-            "/cnrm/recyf/Data/users/danjoul/ddpm_experiments/with_attention/y_pred.csv",
-            "/cnrm/recyf/Data/users/danjoul/ddpm_experiments/T4000/y_pred.csv",
-            "/cnrm/recyf/Data/users/danjoul/ddpm_experiments/postproc_std/y_pred.csv"
+        "results": [ // filepaths to y_pred.csv for each experiment
+            "/cnrm/recyf/Data/users/danjoul/DDPM/experiments/base/y_pred.csv",
+            "/cnrm/recyf/Data/users/danjoul/DDPM/experiments/with_attention/y_pred.csv",
+            "/cnrm/recyf/Data/users/danjoul/DDPM/experiments/T4000/y_pred.csv",
+            "/cnrm/recyf/Data/users/danjoul/DDPM/experiments/postproc_std/y_pred.csv"
         ],
-        "name": ["base", "with_attention", "T4000", "postprocessed"],
-        "interp": ["bl", "bl", "bl", "bl"],
-        "several_inputs": false
+        "name": [ // names of the experiments
+            "base",
+            "with_attention",
+            "T4000",
+            "postprocessed"
+        ],
+        "interp": ["bl", "bl", "bl", "bl"], // interpolations in input
+        "several_inputs": false // true to plot all the inputs
     },
     "maps": {
         "cmap": "viridis",
@@ -43,8 +51,8 @@
         "maps":     true,
         "distribs": false
     },
-    "WD":       false,
+    "WD":       true,
     "PSD":      true,
     "corr_len": true,
-    "corr":     false
+    "corr":     true
 }

@@ -31,6 +31,10 @@ if __name__ == "__main__":
     # Convert to NoneDict, which return None for missing key.
     opt = Logger.dict_to_nonedict(opt)
 
+    # create dirs
+    for _, item in opt["path"].items():
+        os.makedirs(item, exist_ok=True)
+
     # logging
     torch.backends.cudnn.enabled = True
     torch.backends.cudnn.benchmark = True
@@ -39,10 +43,6 @@ if __name__ == "__main__":
                         'log', level=logging.INFO, screen=True)
     logger = logging.getLogger("base")
     logger.info(Logger.dict2str(opt))
-
-    # create dirs
-    for _, item in opt["path"].items():
-        os.makedirs(item, exist_ok=True)
 
     # loading in preprocessing data
     X_train_df, y_train_df, X_valid_df, y_valid_df, X_test_df, y_test_df = Data.load_data(opt["data_loading"])
@@ -120,7 +120,7 @@ if __name__ == "__main__":
 
                     # evaluate model
                     hr_img = Metrics.tensor2image(val_data["HR"]) # see function update visuals 
-                    sr_img = Metrics.tensor2image(diffusion.SR)                    
+                    sr_img = Metrics.tensor2image(diffusion.SR)                   
                     mae = Metrics.score_value(hr_img, sr_img, "mae")
                     mse = Metrics.score_value(hr_img, sr_img, "mse")
                     list_mse.append(mse)
@@ -198,7 +198,6 @@ if __name__ == "__main__":
             sr_img = Metrics.tensor2image(diffusion.SR)
             y_pred_i = [y_test_df.dates.iloc[i], y_test_df.echeances.iloc[i]]
             for i_c, c in enumerate(channels):
-                # y_pred_df[c][i] = sr_img[:, :, i_c]
                 y_pred_i.append(sr_img[:, :, i_c])
             y_pred_df.loc[len(y_pred_df)] = y_pred_i
 

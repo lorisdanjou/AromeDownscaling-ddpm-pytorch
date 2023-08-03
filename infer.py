@@ -18,7 +18,7 @@ from time import perf_counter
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('-c', '--config', type=str, default='config/sr_ddpm.jsonc',
+    parser.add_argument('-c', '--config', type=str, default='config/sr_example.jsonc',
                         help='JSON file for configuration')
     parser.add_argument('-gpu', '--gpu_ids', type=str, default=None)
 
@@ -28,6 +28,10 @@ if __name__ == "__main__":
     opt = Logger.parse(args)
     # Convert to NoneDict, which return None for missing key.
     opt = Logger.dict_to_nonedict(opt)
+
+    # create dirs
+    for _, item in opt["path"].items():
+        os.makedirs(item, exist_ok=True)
 
     # logging
     torch.backends.cudnn.enabled = True

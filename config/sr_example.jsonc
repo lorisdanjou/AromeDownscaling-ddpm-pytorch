@@ -5,15 +5,13 @@
     ],
     "benchmark": false,
     "path": {
-        // "experiments": "/cnrm/recyf/Data/users/danjoul/ddpm_experiments/expe3/",
-        // "resume_state": "/cnrm/recyf/Data/users/danjoul/ddpm_experiments/expe3/checkpoint/I68000_E80",
-        "results":       "/cnrm/recyf/Data/users/danjoul/ddpm_experiments/base/",
-        "log":           "/cnrm/recyf/Data/users/danjoul/ddpm_experiments/base/logs/",
-        "checkpoint":    "/cnrm/recyf/Data/users/danjoul/ddpm_experiments/base/checkpoint/",
-        "working_dir" :  "/cnrm/recyf/Data/users/danjoul/ddpm_experiments/base/",
-        "tb_logger":     "/cnrm/recyf/Data/users/danjoul/ddpm_experiments/base/tb_logger/",
-        "eval_results" : "/cnrm/recyf/Data/users/danjoul/ddpm_experiments/base/eval_results/",
-        "infer_results": "/cnrm/recyf/Data/users/danjoul/ddpm_experiments/base/infer_results/"
+        // "resume_state": "/cnrm/recyf/Data/users/danjoul/DDPM/experiments/long_training/checkpoint/I68000_E80",
+        "working_dir" :  "/cnrm/recyf/Data/users/danjoul/DDPM/experiments/example/",
+        "results":       "/cnrm/recyf/Data/users/danjoul/DDPM/experiments/example/",
+        "log":           "/cnrm/recyf/Data/users/danjoul/DDPM/experiments/example/",
+        "checkpoint":    "/cnrm/recyf/Data/users/danjoul/DDPM/experiments/example/checkpoint/",
+        "eval_results" : "/cnrm/recyf/Data/users/danjoul/DDPM/experiments/example/eval_results/",
+        "infer_results": "/cnrm/recyf/Data/users/danjoul/DDPM/experiments/example/infer_results/"
     },
     "data_loading": {
         // these hyperparameters should not be changed : 
@@ -52,12 +50,12 @@
         "normalisation": "standardisation" //"standardisation", "normalisation", "minmax" or "mean" 
     },
     "model": {
-        "which_model_G": "ddpm",
+        "which_model_G": "ddpm", // do not change
         "unet": {
-            "type": "normal", //"normal" or "bypass"
-            "in_channel": 4,
-            "out_channel": 2,
-            "norm_groups": null,
+            "type": "normal", // "normal" or "bypass" (mean bypass network)
+            "in_channel": 4, // 2 * number of input channels 
+            "out_channel": 2, // number of output channels
+            "norm_groups": null, 
             "inner_channel": 64,
             "channel_multiplier": [
                 1,
@@ -65,9 +63,12 @@
                 4,
                 8
             ],
+            "attn_res": [
+                [28, 34] // resolution of the images on the layer where attention is added
+            ],
             "res_blocks": 2,
             "dropout": 0.2,
-            "batch_norm": true
+            "batch_norm": false
         },
         "diffusion": {
             "img_h": 224,
@@ -78,20 +79,19 @@
         "beta_schedule": { // use manual beta_schedule for acceleration
             "train": {
                 "schedule": "linear",
-                "n_timestep": 1000,
+                "n_timestep": 2000,
                 "linear_start": 1e-6,
                 "linear_end": 1e-2
             },
             "val": {
                 "schedule": "linear",
-                "n_timestep": 1000,
+                "n_timestep": 2000,
                 "linear_start": 1e-6,
                 "linear_end": 1e-2
             }
         }
     },
     "training": {
-        "enable": true,
         "batch_size": 4,
         "num_workers": 8,
         "use_shuffle": true,
@@ -99,24 +99,22 @@
             "type": "adam",
             "lr": 1e-4
         },
-        "n_iter": 100000,
-        "val_freq": 2000,//1e4
-        "save_checkpoint_freq": 2000,
-        "print_freq": 500,
-        "data_len": 50
-        // "n_epochs": 100
-
+        "n_iter": 2,
+        "val_freq": 1, //10000
+        "save_checkpoint_freq": 1, //10000
+        "print_freq": 1, //500
+        "data_len": 1 //50
     },
     "inference": {
         "enable": true,
         "print_freq": 5,
         "save_freq": 10,
         "i_min": 0, // included
-        "i_max": 200, // not included
+        "i_max": 2, //200 // not included
         "step": 1
     },
     "postprocessing": { // not already included in the main programme
-        "method": "minmax" //"minmax" or "std"
+        "method": "std" //null, "minmax" or "std"
     },
     "results": {
         "images": {

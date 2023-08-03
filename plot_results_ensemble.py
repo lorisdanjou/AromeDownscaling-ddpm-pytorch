@@ -57,72 +57,72 @@ if __name__ == "__main__":
         opt["data_loading"]["params_out"]
     )
 
-    for i_p, p in enumerate(opt["data_loading"]["params_out"]):
+    # for i_p, p in enumerate(opt["data_loading"]["params_out"]):
 
-        output_dir = os.path.join(opt["path"]["working_dir"], p + "/")
-        os.makedirs(output_dir, exist_ok=True)
-        output_dir_arome = os.path.join(output_dir, "arome/")
-        os.makedirs(output_dir_arome, exist_ok=True)
-        output_dir_ddpm = os.path.join(output_dir, "ddpm/")
-        os.makedirs(output_dir_ddpm, exist_ok=True)
+    #     output_dir = os.path.join(opt["path"]["working_dir"], p + "/")
+    #     os.makedirs(output_dir, exist_ok=True)
+    #     output_dir_arome = os.path.join(output_dir, "arome/")
+    #     os.makedirs(output_dir_arome, exist_ok=True)
+    #     output_dir_ddpm = os.path.join(output_dir, "ddpm/")
+    #     os.makedirs(output_dir_ddpm, exist_ok=True)
         
 
-        # plot maps for all ensembles
-        print("plotting maps ...")
-        maps.plot_maps_ensemble(
-            arome_ensemble,
-            output_dir_arome,
-            param=p,
-            n_members=ens_opt_arome["n_members"],
-            n=opt["results"]["images"]["n"],
-            cmap=opt["results"]["images"]["cmap"][i_p],
-            unit=opt["results"]["images"]["units"][i_p]
-        )
+    #     # plot maps for all ensembles
+    #     print("plotting maps ...")
+    #     maps.plot_maps_ensemble(
+    #         arome_ensemble,
+    #         output_dir_arome,
+    #         param=p,
+    #         n_members=ens_opt_arome["n_members"],
+    #         n=opt["results"]["images"]["n"],
+    #         cmap=opt["results"]["images"]["cmap"][i_p],
+    #         unit=opt["results"]["images"]["units"][i_p]
+    #     )
 
-        maps.plot_maps_ensemble(
-            ddpm_ensemble,
-            output_dir_ddpm,
-            param=p,
-            n_members=ens_opt_ddpm["n_members"],
-            n=opt["results"]["images"]["n"],
-            cmap=opt["results"]["images"]["cmap"][i_p],
-            unit=opt["results"]["images"]["units"][i_p]
-        )
+    #     maps.plot_maps_ensemble(
+    #         ddpm_ensemble,
+    #         output_dir_ddpm,
+    #         param=p,
+    #         n_members=ens_opt_ddpm["n_members"],
+    #         n=opt["results"]["images"]["n"],
+    #         cmap=opt["results"]["images"]["cmap"][i_p],
+    #         unit=opt["results"]["images"]["units"][i_p]
+    #     )
 
-        # plot stats
-        mean_arome = stats.compute_pointwise_mean(arome_ensemble, ens_opt_arome["n_members"], opt["data_loading"]["params_out"])
-        std_arome  = stats.compute_pointwise_std(arome_ensemble, ens_opt_arome["n_members"], opt["data_loading"]["params_out"])
-        Q5_arome   = stats.compute_pointwise_Q5(arome_ensemble, ens_opt_arome["n_members"], opt["data_loading"]["params_out"])
-        Q95_arome  = stats.compute_pointwise_Q95(arome_ensemble, ens_opt_arome["n_members"], opt["data_loading"]["params_out"])
-        mean_ddpm  = stats.compute_pointwise_mean(ddpm_ensemble , ens_opt_ddpm["n_members"] , opt["data_loading"]["params_out"])
-        std_ddpm   = stats.compute_pointwise_std(ddpm_ensemble , ens_opt_ddpm["n_members"] , opt["data_loading"]["params_out"])
-        Q5_ddpm    = stats.compute_pointwise_Q5(ddpm_ensemble , ens_opt_ddpm["n_members"] , opt["data_loading"]["params_out"])
-        Q95_ddpm   = stats.compute_pointwise_Q95(ddpm_ensemble , ens_opt_ddpm["n_members"] , opt["data_loading"]["params_out"])
+    #     # plot stats
+    #     mean_arome = stats.compute_pointwise_mean(arome_ensemble, ens_opt_arome["n_members"], opt["data_loading"]["params_out"])
+    #     std_arome  = stats.compute_pointwise_std(arome_ensemble, ens_opt_arome["n_members"], opt["data_loading"]["params_out"])
+    #     Q5_arome   = stats.compute_pointwise_Q5(arome_ensemble, ens_opt_arome["n_members"], opt["data_loading"]["params_out"])
+    #     Q95_arome  = stats.compute_pointwise_Q95(arome_ensemble, ens_opt_arome["n_members"], opt["data_loading"]["params_out"])
+    #     mean_ddpm  = stats.compute_pointwise_mean(ddpm_ensemble , ens_opt_ddpm["n_members"] , opt["data_loading"]["params_out"])
+    #     std_ddpm   = stats.compute_pointwise_std(ddpm_ensemble , ens_opt_ddpm["n_members"] , opt["data_loading"]["params_out"])
+    #     Q5_ddpm    = stats.compute_pointwise_Q5(ddpm_ensemble , ens_opt_ddpm["n_members"] , opt["data_loading"]["params_out"])
+    #     Q95_ddpm   = stats.compute_pointwise_Q95(ddpm_ensemble , ens_opt_ddpm["n_members"] , opt["data_loading"]["params_out"])
 
-        mean = lde.group_ensembles(mean_arome, mean_ddpm) 
-        std  = lde.group_ensembles(std_arome, std_ddpm) 
-        Q95  = lde.group_ensembles(Q5_arome, Q5_ddpm)
-        Q5   = lde.group_ensembles(Q95_arome, Q95_ddpm)
+    #     mean = lde.group_ensembles(mean_arome, mean_ddpm) 
+    #     std  = lde.group_ensembles(std_arome, std_ddpm) 
+    #     Q95  = lde.group_ensembles(Q5_arome, Q5_ddpm)
+    #     Q5   = lde.group_ensembles(Q95_arome, Q95_ddpm)
 
-        print("plotting stats ...")
+    #     print("plotting stats ...")
     
-        stats.synthesis_unique_all_stats_ensemble(
-            mean,
-            std,
-            Q5,
-            Q95,
-            output_dir,
-            p
-        )
+    #     stats.synthesis_unique_all_stats_ensemble(
+    #         mean,
+    #         std,
+    #         Q5,
+    #         Q95,
+    #         output_dir,
+    #         p
+    #     )
 
-        stats.synthesis_stat_distrib(
-            mean,
-            std,
-            Q5,
-            Q95,
-            output_dir,
-            p
-        )
+    #     stats.synthesis_stat_distrib(
+    #         mean,
+    #         std,
+    #         Q5,
+    #         Q95,
+    #         output_dir,
+    #         p
+    #     )
 
 
     # wind modulus
