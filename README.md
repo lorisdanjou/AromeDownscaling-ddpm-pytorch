@@ -2,6 +2,8 @@
 This project is the second part of an internship at Meteo France (part 1 :https://github.com/lorisdanjou/AromeDownscaling-unet-keras), which aims at downscaling meteorological fields obtained with the Arome model.
 It is fully usable as long as it is used on the data it has been created to work with.
 
+It is largely innspired by: https://github.com/Janspiry/Image-Super-Resolution-via-Iterative-Refinement
+
 ## Prerequisites
 Some packages (and specific versions of these packages) need to be installed to run the codes:
 ```
@@ -28,7 +30,7 @@ The `infer.py` file is made for that:
 python3 infer.py -c config/sr_example.jsonc
 ```
 
-## Print the results of an experiment
+## Plot the results of an experiment
 You can use the `plot_results.py` script to do that: 
 ```
 python3 plot_results.py -c config/sr_example.jsonc
